@@ -93,6 +93,7 @@ export default function Compose() {
   const [selectedMedia, setSelectedMedia] = useState<string[]>(
     product?.featuredImage?.url ? [product.featuredImage.url] : [],
   );
+  const [scheduledFor, setScheduledFor] = useState("");
 
   // All hooks must be above this line. Early returns below.
 
@@ -137,6 +138,9 @@ export default function Compose() {
     body.append("timezone", loaderData.defaultTimezone || "UTC");
     body.append("accounts", selectedAccounts.join(","));
     body.append("media", selectedMedia.join(","));
+    if (scheduledFor && !publishNow) {
+      body.append("scheduledFor", new Date(scheduledFor).toISOString());
+    }
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/create-post", true);
@@ -146,7 +150,12 @@ export default function Compose() {
         const result = JSON.parse(xhr.responseText);
         if (result.success) {
           setSubmitState("done");
-          shopify.toast.show("Post created!");
+          const toastMsg = publishNow
+            ? "Post published!"
+            : scheduledFor
+              ? "Post scheduled!"
+              : "Draft saved!";
+          shopify.toast.show(toastMsg);
         } else {
           setSubmitState("error");
           setSubmitError(result.error || "Unknown error");
@@ -251,6 +260,54 @@ export default function Compose() {
           checked={publishNow || undefined}
           onChange={() => setPublishNow((prev) => !prev)}
         ></s-checkbox>
+
+        {/* Date/time picker for scheduling (hidden when "Publish immediately" is checked) */}
+        {!publishNow && (
+          <div style={{ marginTop: "12px" }}>
+            <label
+              htmlFor="scheduledFor"
+              style={{
+                display: "block",
+                fontSize: "13px",
+                fontWeight: 550,
+                marginBottom: "4px",
+                color: "var(--p-color-text)",
+              }}
+            >
+              Schedule for
+            </label>
+            <input
+              id="scheduledFor"
+              type="datetime-local"
+              value={scheduledFor}
+              onChange={(e) => setScheduledFor(e.target.value)}
+              min={new Date().toISOString().slice(0, 16)}
+              style={{
+                width: "100%",
+                maxWidth: "320px",
+                padding: "8px 12px",
+                fontSize: "14px",
+                lineHeight: "20px",
+                border: "1px solid var(--p-color-border, #8c9196)",
+                borderRadius: "8px",
+                backgroundColor: "var(--p-color-bg-surface, #fff)",
+                color: "var(--p-color-text, #202223)",
+                fontFamily: "inherit",
+              }}
+            />
+            <p
+              style={{
+                fontSize: "12px",
+                color: "var(--p-color-text-secondary, #6d7175)",
+                marginTop: "4px",
+              }}
+            >
+              {scheduledFor
+                ? `Will be scheduled for ${new Date(scheduledFor).toLocaleString()}`
+                : "Leave empty to save as draft"}
+            </p>
+          </div>
+        )}
       </s-section>
 
       {/* Submit */}
@@ -260,7 +317,13 @@ export default function Compose() {
           disabled={submitState === "sending" || undefined}
           onClick={handleSubmit}
         >
-          {submitState === "sending" ? "Sending..." : "Schedule post"}
+          {submitState === "sending"
+            ? "Sending..."
+            : publishNow
+              ? "Publish now"
+              : scheduledFor
+                ? "Schedule post"
+                : "Save as draft"}
         </s-button>
       </s-section>
     </s-page>

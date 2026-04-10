@@ -1,49 +1,363 @@
-.index {
-  align-items: center;
+/* Landing page styles - dark/light friendly */
+
+.page {
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-  text-align: center;
-  padding: 1rem;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #1a1a2e;
+  background: #ffffff;
 }
 
-.heading,
-.text {
-  padding: 0;
+@media (prefers-color-scheme: dark) {
+  .page {
+    color: #e8e8f0;
+    background: #0f0f1a;
+  }
+}
+
+/* Header */
+
+.header {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .header {
+    border-bottom-color: #2a2a3d;
+  }
+}
+
+.headerInner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #6c3ce9;
+}
+
+.headerNav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.headerLink {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.headerLink:hover {
+  color: #1a1a2e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .headerLink {
+    color: #9ca3af;
+  }
+  .headerLink:hover {
+    color: #e8e8f0;
+  }
+}
+
+.ctaSmall {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+  background: #6c3ce9;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.ctaSmall:hover {
+  background: #5a2dd1;
+}
+
+/* Hero */
+
+.hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1.5rem;
+}
+
+.heroContent {
+  max-width: 640px;
+  text-align: center;
+}
+
+.heading {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 0 0 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .heading {
+    font-size: 2rem;
+  }
+}
+
+.subheading {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: #6b7280;
+  margin: 0 0 2rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .subheading {
+    color: #9ca3af;
+  }
+}
+
+.ctaGroup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ctaPrimary {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #6c3ce9;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.ctaPrimary:hover {
+  background: #5a2dd1;
+}
+
+.ctaSecondary {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: transparent;
+  padding: 0.75rem 2rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.ctaSecondary:hover {
+  color: #1a1a2e;
+  border-color: #9ca3af;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ctaSecondary {
+    color: #9ca3af;
+    border-color: #3a3a4d;
+  }
+  .ctaSecondary:hover {
+    color: #e8e8f0;
+    border-color: #6b7280;
+  }
+}
+
+/* Features */
+
+.features {
+  padding: 3rem 1.5rem 4rem;
+  background: #f9fafb;
+}
+
+@media (prefers-color-scheme: dark) {
+  .features {
+    background: #161625;
+  }
+}
+
+.featuresGrid {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 700px) {
+  .featuresGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.feature {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+
+.featureIcon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.featureTitle {
+  font-size: 1rem;
+  font-weight: 650;
+  margin: 0 0 0.5rem;
+}
+
+.featureDesc {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #6b7280;
   margin: 0;
 }
 
-.text {
-  font-size: 1.2rem;
-  padding-bottom: 2rem;
+@media (prefers-color-scheme: dark) {
+  .featureDesc {
+    color: #9ca3af;
+  }
 }
 
-.content {
-  display: grid;
-  gap: 2rem;
+/* Login section */
+
+.loginSection {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  .loginSection {
+    border-top-color: #2a2a3d;
+  }
+}
+
+.loginHeading {
+  font-size: 1.125rem;
+  font-weight: 650;
+  margin: 0 0 0.5rem;
+}
+
+.loginText {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .loginText {
+    color: #9ca3af;
+  }
 }
 
 .form {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  margin: 0 auto;
-  gap: 1rem;
-}
-
-.label {
-  display: grid;
-  gap: 0.2rem;
-  max-width: 20rem;
-  text-align: left;
-  font-size: 1rem;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .input {
-  padding: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  width: 260px;
+  max-width: 100%;
+  background: #fff;
+  color: #1a1a2e;
 }
 
-.button {
-  padding: 0.4rem;
+@media (prefers-color-scheme: dark) {
+  .input {
+    background: #1e1e30;
+    border-color: #3a3a4d;
+    color: #e8e8f0;
+  }
+}
+
+.loginButton {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: #6c3ce9;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.loginButton:hover {
+  background: #5a2dd1;
+}
+
+/* Footer */
+
+.footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .footer {
+    border-top-color: #2a2a3d;
+  }
+}
+
+.footerInner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.footerBrand {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.footerLink {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footerLink:hover {
+  color: #6b7280;
+}
+
+@media (prefers-color-scheme: dark) {
+  .footerLink:hover {
+    color: #d1d5db;
+  }
 }

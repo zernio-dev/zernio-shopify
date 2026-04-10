@@ -73,7 +73,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // The webhook URL points to our /api/zernio-webhook endpoint.
     // This is best-effort; if it fails the app still works (just won't get
     // real-time status updates).
-    const appUrl = process.env.SHOPIFY_APP_URL || "https://zernio-shopify-one.vercel.app";
+    const appUrl = process.env.SHOPIFY_APP_URL || "https://shopify.zernio.com";
     try {
       const webhook = await client.createWebhook({
         name: `Shopify - ${shop}`,
