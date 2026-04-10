@@ -1,5 +1,5 @@
 # Learn more: https://shopify.dev/docs/apps/build/cli-for-apps/app-configuration
-client_id = ""
+client_id = "ee20ee832fea8bfbc7fe61e1c960b935"
 
 [access_scopes]
 scopes = "read_products"
