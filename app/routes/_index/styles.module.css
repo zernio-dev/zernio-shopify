@@ -1,176 +1,294 @@
-/* Zernio for Shopify - Landing page */
+/* Zernio × Shopify — Statement landing */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
 .page {
   min-height: 100vh;
+  background: #0a0a0a;
+  color: #fafafa;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #F0EFEB;
-  font-family: Menlo, Consolas, Monaco, 'Liberation Mono', 'Courier New', monospace;
-  padding: 2rem;
-}
-
-.card {
-  max-width: 480px;
-  width: 100%;
-  background: #FFFFFF;
-  border-radius: 20px;
+  flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
-}
-
-/* Top banner - coral gradient */
-.banner {
-  background: linear-gradient(135deg, #EB3514 0%, #660202 100%);
-  padding: 2.5rem 2rem 2rem;
-  text-align: center;
   position: relative;
-  overflow: hidden;
 }
 
-/* Subtle pattern overlay */
-.banner::before {
+/* Ambient glow */
+.page::before {
   content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 50%);
+  position: fixed;
+  top: -40%;
+  left: -20%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(ellipse, rgba(235, 53, 20, 0.08) 0%, transparent 70%);
+  pointer-events: none;
 }
 
-.logos {
+.page::after {
+  content: '';
+  position: fixed;
+  bottom: -30%;
+  right: -20%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(ellipse, rgba(102, 2, 2, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Nav */
+.nav {
+  padding: 1.25rem 2rem;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  justify-content: space-between;
   position: relative;
+  z-index: 10;
+  animation: slideUp 0.6s ease both;
 }
 
-.zernioLogo {
-  font-size: 1.5rem;
+.brand {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.875rem;
   font-weight: 700;
-  color: #FFFFFF;
-  letter-spacing: -0.03em;
-}
-
-.times {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 1.25rem;
-  font-weight: 300;
-}
-
-.shopifyLogo {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.shopifyIcon {
-  width: 28px;
-  height: 28px;
-}
-
-.shopifyText {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #FFFFFF;
+  color: #EB3514;
   letter-spacing: -0.02em;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.tagline {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.8125rem;
-  line-height: 1.6;
-  margin: 0;
-  position: relative;
-}
-
-/* Body content */
-.body {
-  padding: 2rem;
-}
-
-.platforms {
+.navLinks {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.navLink {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.navLink:hover {
+  color: #fafafa;
+}
+
+/* Hero */
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 1.75rem;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  z-index: 10;
 }
 
-.platform {
-  font-size: 0.6875rem;
-  color: #6B6B6B;
-  background: #F0EFEB;
-  padding: 0.25rem 0.625rem;
-  border-radius: 100px;
-  white-space: nowrap;
+.logoMark {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 3rem;
+  animation: slideUp 0.6s ease 0.1s both;
 }
 
-.installBtn {
-  display: block;
-  width: 100%;
-  padding: 0.875rem;
-  background: #EB3514;
-  color: #FFFFFF;
-  font-family: Menlo, Consolas, Monaco, monospace;
+.zMark {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #EB3514;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.connector {
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, #EB3514, #95BF47);
+  border-radius: 2px;
+  animation: pulse 2s ease infinite;
+}
+
+.sMark {
+  width: 40px;
+  height: 40px;
+  animation: float 3s ease infinite;
+}
+
+.headline {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin: 0 0 1.5rem;
+  max-width: 700px;
+  animation: slideUp 0.6s ease 0.2s both;
+}
+
+.headlineAccent {
+  background: linear-gradient(135deg, #EB3514 0%, #ff6b4a 50%, #EB3514 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 3s ease infinite;
+}
+
+.sub {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+  color: #888;
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 0 2.5rem;
+  animation: slideUp 0.6s ease 0.3s both;
+}
+
+/* CTA */
+.ctas {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  animation: slideUp 0.6s ease 0.4s both;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  font-family: Menlo, Consolas, monospace;
   font-size: 0.8125rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  text-align: center;
-  text-decoration: none;
+  color: #fff;
+  background: #EB3514;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
+  text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: all 0.2s;
+  box-shadow: 0 0 0 0 rgba(235, 53, 20, 0), 0 4px 16px rgba(235, 53, 20, 0.3);
 }
 
-.installBtn:hover {
-  background: #d42f10;
-  transform: translateY(-1px);
+.ctaPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(235, 53, 20, 0.2), 0 8px 24px rgba(235, 53, 20, 0.4);
 }
 
-.installBtn:active {
+.ctaPrimary:active {
   transform: translateY(0);
 }
 
-.divider {
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #888;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.ctaSecondary:hover {
+  color: #fafafa;
+  border-color: #555;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Platforms ticker */
+.platforms {
+  margin-top: 4rem;
+  animation: slideUp 0.6s ease 0.5s both;
+}
+
+.platformsLabel {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #444;
+  margin-bottom: 1rem;
+}
+
+.platformsList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: 500px;
+}
+
+.pill {
+  font-family: Menlo, Consolas, monospace;
+  font-size: 0.6875rem;
+  color: #666;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid #222;
+  border-radius: 100px;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.pill:hover {
+  color: #EB3514;
+  border-color: #EB3514;
+  background: rgba(235, 53, 20, 0.05);
+}
+
+/* Login fallback */
+.loginSection {
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  animation: slideUp 0.6s ease 0.6s both;
+}
+
+.loginInner {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin: 1.25rem 0;
-  color: #6B6B6B;
-  font-size: 0.6875rem;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #D9D8D3;
-}
-
-.loginForm {
-  display: flex;
   gap: 0.5rem;
 }
 
 .loginInput {
-  flex: 1;
-  padding: 0.625rem 0.75rem;
-  font-family: Menlo, Consolas, Monaco, monospace;
+  padding: 0.5rem 0.75rem;
+  font-family: Menlo, Consolas, monospace;
   font-size: 0.75rem;
-  color: #2D2D2D;
-  background: #F0EFEB;
-  border: 1px solid #D9D8D3;
+  color: #fafafa;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #333;
   border-radius: 8px;
+  width: 220px;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.2s;
 }
 
 .loginInput:focus {
@@ -178,41 +296,43 @@
 }
 
 .loginInput::placeholder {
-  color: #A57070;
+  color: #555;
 }
 
 .loginBtn {
-  padding: 0.625rem 1rem;
-  font-family: Menlo, Consolas, Monaco, monospace;
+  padding: 0.5rem 1rem;
+  font-family: Menlo, Consolas, monospace;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #2D2D2D;
-  background: #FFFFFF;
-  border: 1px solid #D9D8D3;
+  color: #888;
+  background: transparent;
+  border: 1px solid #333;
   border-radius: 8px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  white-space: nowrap;
+  transition: all 0.2s;
 }
 
 .loginBtn:hover {
-  background: #F0EFEB;
-  border-color: #6B6B6B;
+  color: #fafafa;
+  border-color: #555;
 }
 
 /* Footer */
 .footer {
-  padding: 0 2rem 1.5rem;
+  padding: 1.5rem 2rem;
   display: flex;
   justify-content: center;
-  gap: 1.25rem;
+  gap: 2rem;
+  position: relative;
+  z-index: 10;
 }
 
 .footerLink {
+  font-family: Menlo, Consolas, monospace;
   font-size: 0.6875rem;
-  color: #A57070;
+  color: #444;
   text-decoration: none;
-  transition: color 0.15s;
+  transition: color 0.2s;
 }
 
 .footerLink:hover {
