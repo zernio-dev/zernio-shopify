@@ -222,33 +222,40 @@ export default function Compose() {
     setSubmitState("sending");
     setSubmitError("");
 
-    try {
-      const body = new URLSearchParams();
-      body.append("content", content);
-      body.append("productId", product.id);
-      body.append("productTitle", product.title);
-      body.append("publishNow", publishNow ? "true" : "false");
-      body.append("timezone", loaderData.defaultTimezone || "UTC");
-      body.append("accounts", selectedAccounts.join(","));
-      body.append("media", selectedMedia.join(","));
+    // Use XMLHttpRequest instead of fetch to bypass App Bridge's fetch interceptor
+    // which swallows requests in embedded Shopify apps.
+    const body = new URLSearchParams();
+    body.append("content", content);
+    body.append("productId", product.id);
+    body.append("productTitle", product.title);
+    body.append("publishNow", publishNow ? "true" : "false");
+    body.append("timezone", loaderData.defaultTimezone || "UTC");
+    body.append("accounts", selectedAccounts.join(","));
+    body.append("media", selectedMedia.join(","));
 
-      const res = await fetch("/api/create-post", {
-        method: "POST",
-        body,
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      });
-      const result = await res.json();
-      if (result.success) {
-        setSubmitState("done");
-        shopify.toast.show("Post created!");
-      } else {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/create-post", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onload = () => {
+      try {
+        const result = JSON.parse(xhr.responseText);
+        if (result.success) {
+          setSubmitState("done");
+          shopify.toast.show("Post created!");
+        } else {
+          setSubmitState("error");
+          setSubmitError(result.error || "Unknown error");
+        }
+      } catch {
         setSubmitState("error");
-        setSubmitError(result.error || "Unknown error");
+        setSubmitError("Invalid response from server");
       }
-    } catch (err) {
+    };
+    xhr.onerror = () => {
       setSubmitState("error");
       setSubmitError("Network error. Try again.");
-    }
+    };
+    xhr.send(body.toString());
   };
 
   return (
