@@ -12,11 +12,11 @@
 // ---------------------------------------------------------------------------
 
 export interface ZernioUser {
-  _id: string;
-  name: string;
-  email: string;
   planName: string;
   hasAccess: boolean;
+  billingPeriod: string;
+  limits: { uploads: number; profiles: number };
+  usage: { uploads: number; profiles: number };
 }
 
 export interface ZernioProfile {
@@ -167,10 +167,12 @@ export class ZernioClient {
 
   // ---- endpoints ----------------------------------------------------------
 
-  /** Verify the API key and return the authenticated user. */
+  /** Verify the API key and return the authenticated user info. */
   async getUser(): Promise<ZernioUser> {
-    const data = await this.request<{ user: ZernioUser }>("GET", "/user");
-    return data.user;
+    // The Zernio API doesn't have a dedicated /user endpoint.
+    // /usage-stats returns plan info and validates the API key.
+    const data = await this.request<ZernioUser>("GET", "/usage-stats");
+    return data;
   }
 
   /** List all profiles for the authenticated user. */
