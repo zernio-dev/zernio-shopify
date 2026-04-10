@@ -4,7 +4,7 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { useFetcher, useLoaderData } from "react-router";
+import { Link, useFetcher, useLoaderData, useNavigate } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
@@ -96,6 +96,7 @@ export default function AppIndex() {
   const { onboarded, recentPosts } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
+  const navigate = useNavigate();
 
   const isLoading =
     ["loading", "submitting"].includes(fetcher.state) &&
@@ -200,22 +201,18 @@ export default function AppIndex() {
   // Dashboard
   return (
     <s-page heading="Zernio">
-      <s-button slot="primary-action" href="/app/products">
-        Share a product
-      </s-button>
-
       <s-section heading="Quick actions">
         <s-stack direction="inline" gap="base">
-          <s-button href="/app/products">Browse products</s-button>
-          <s-button href="/app/posts">View posts</s-button>
-          <s-button href="/app/settings" variant="tertiary">Settings</s-button>
+          <button type="button" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/products`; }} style={{padding:"8px 20px",fontSize:"14px",fontWeight:600,backgroundColor:"#008060",color:"white",border:"none",borderRadius:"8px",cursor:"pointer"}}>Browse products</button>
+          <button type="button" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/posts`; }} style={{padding:"8px 20px",fontSize:"14px",fontWeight:600,backgroundColor:"#008060",color:"white",border:"none",borderRadius:"8px",cursor:"pointer"}}>View posts</button>
+          <button type="button" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/settings`; }} style={{padding:"8px 20px",fontSize:"14px",fontWeight:600,backgroundColor:"#ddd",color:"#333",border:"none",borderRadius:"8px",cursor:"pointer"}}>Settings</button>
         </s-stack>
       </s-section>
 
       <s-section heading="Recent posts">
         {recentPosts.length === 0 ? (
           <s-paragraph>
-            No posts yet. Go to <s-link href="/app/products">Products</s-link> to
+            No posts yet. Go to <s-link url="/app/products">Products</s-link> to
             schedule your first post.
           </s-paragraph>
         ) : (

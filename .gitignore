@@ -52,3 +52,6 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vercel
 .env*.local
+*.png
+auth.json
+test-*.mjs

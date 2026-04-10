@@ -3,6 +3,7 @@ import type {
   LoaderFunctionArgs,
 } from "react-router";
 import { useLoaderData, useNavigate, useSearchParams } from "react-router";
+import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
 import { authenticate } from "../shopify.server";
@@ -41,6 +42,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function Products() {
   const { products, pageInfo, search } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  const shopify = useAppBridge();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -106,15 +108,18 @@ export default function Products() {
                         {product.priceRangeV2.minVariantPrice.amount}
                       </s-text>
                     </s-stack>
-                    <s-button
-                      onClick={() =>
-                        navigate(
-                          `/app/compose?productId=${encodeURIComponent(product.id)}`,
-                        )
-                      }
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const host = new URLSearchParams(window.location.search).get("host");
+                        const decodedHost = host ? atob(host) : "";
+                        const base = decodedHost ? `https://${decodedHost}` : window.top?.location?.origin || "";
+                        window.top.location.href = `${base}/apps/zernio/compose?productId=${encodeURIComponent(product.id)}`;
+                      }}
+                      style={{padding:"6px 16px",fontSize:"13px",backgroundColor:"#008060",color:"white",border:"none",borderRadius:"6px",cursor:"pointer"}}
                     >
                       Share to social
-                    </s-button>
+                    </button>
                   </s-stack>
                 </s-box>
               ),
