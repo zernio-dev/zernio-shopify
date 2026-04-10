@@ -174,13 +174,13 @@ export default function Compose() {
         {loaderData.error && (
           <s-banner tone="warning">{loaderData.error}</s-banner>
         )}
-        <label>
-          <s-text fontWeight="bold">Caption</s-text>
+        <label className="form-label">
+          <span className="form-label-text">Caption</span>
           <textarea
             id="postContent"
             rows={6}
             defaultValue={defaultContent}
-            style={{ width: "100%", padding: "8px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "8px", marginTop: "4px", fontFamily: "inherit" }}
+            className="textarea"
           />
         </label>
       </s-section>
@@ -191,13 +191,12 @@ export default function Compose() {
           <s-paragraph>Select images to include in your post.</s-paragraph>
           <s-stack direction="inline" gap="base">
             {product.images.nodes.map((img: { id: string; url: string; altText: string | null }) => (
-              <label key={img.id} style={{ cursor: "pointer" }}>
+              <label key={img.id} className="media-checkbox-label">
                 <input
                   type="checkbox"
                   name="media"
                   value={img.url}
                   defaultChecked={img.url === product.featuredImage?.url}
-                  style={{ marginRight: "4px" }}
                 />
                 <s-thumbnail source={img.url} alt={img.altText || product.title} />
               </label>
@@ -215,7 +214,7 @@ export default function Compose() {
         ) : (
           <s-stack direction="block" gap="small-200">
             {accounts.map((acc: { _id: string; platform: string; username: string; isActive: boolean }) => (
-              <label key={acc._id} style={{ display: "flex", alignItems: "center", gap: "8px", opacity: acc.isActive ? 1 : 0.5 }}>
+              <label key={acc._id} className={`checkbox-label ${!acc.isActive ? "checkbox-label-dimmed" : ""}`}>
                 <input
                   type="checkbox"
                   name="accounts"
@@ -231,7 +230,7 @@ export default function Compose() {
 
       {/* Schedule */}
       <s-section heading="Schedule">
-        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <label className="checkbox-label">
           <input type="checkbox" id="publishNow" defaultChecked />
           <span>Publish immediately</span>
         </label>
@@ -243,16 +242,7 @@ export default function Compose() {
           type="button"
           disabled={submitState === "sending"}
           onClick={handleSubmit}
-          style={{
-            padding: "10px 32px",
-            fontSize: "14px",
-            fontWeight: 600,
-            backgroundColor: submitState === "sending" ? "#999" : "#008060",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: submitState === "sending" ? "wait" : "pointer",
-          }}
+          className={`btn btn-primary btn-lg ${submitState === "sending" ? "btn-loading" : ""}`}
         >
           {submitState === "sending" ? "Sending..." : "Schedule post"}
         </button>

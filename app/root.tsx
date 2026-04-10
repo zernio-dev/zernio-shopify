@@ -8,6 +8,7 @@ import {
   useRouteError,
 } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import "./styles/shopify.css";
 
 export default function App() {
   return (

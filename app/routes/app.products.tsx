@@ -55,17 +55,15 @@ export default function Products() {
   return (
     <s-page heading="Products">
       <s-section>
-        <form onSubmit={handleSearch}>
-          <s-stack direction="inline" gap="base">
-            <s-search-field
-              name="q"
-              label="Search products"
-              placeholder="Search by title, type, vendor..."
-              defaultValue={search}
-              clearButton
-            />
-            <s-button type="submit">Search</s-button>
-          </s-stack>
+        <form onSubmit={handleSearch} className="search-form">
+          <input
+            name="q"
+            type="text"
+            placeholder="Search by title, type, vendor..."
+            defaultValue={search}
+            className="input"
+          />
+          <button type="submit" className="btn btn-primary">Search</button>
         </form>
       </s-section>
 
@@ -110,13 +108,13 @@ export default function Products() {
                     </s-stack>
                     <button
                       type="button"
+                      className="btn btn-primary btn-slim"
                       onClick={() => {
                         const host = new URLSearchParams(window.location.search).get("host");
                         const decodedHost = host ? atob(host) : "";
                         const base = decodedHost ? `https://${decodedHost}` : window.top?.location?.origin || "";
                         window.top.location.href = `${base}/apps/zernio/compose?productId=${encodeURIComponent(product.id)}`;
                       }}
-                      style={{padding:"6px 16px",fontSize:"13px",backgroundColor:"#008060",color:"white",border:"none",borderRadius:"6px",cursor:"pointer"}}
                     >
                       Share to social
                     </button>

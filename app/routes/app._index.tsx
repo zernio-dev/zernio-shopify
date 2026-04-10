@@ -148,13 +148,7 @@ export default function AppIndex() {
             type="text"
             placeholder="sk_..."
             autoComplete="off"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              fontSize: "14px",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-            }}
+            className="input"
           />
           {fetcher.data?.error && (
             <s-banner tone="critical">{fetcher.data.error}</s-banner>
@@ -171,17 +165,7 @@ export default function AppIndex() {
               }
               fetcher.submit({ apiKey: val }, { method: "POST", action: "/api/verify-key" });
             }}
-            style={{
-              padding: "10px 32px",
-              fontSize: "14px",
-              fontWeight: 600,
-              backgroundColor: isLoading ? "#999" : "#008060",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: isLoading ? "wait" : "pointer",
-              marginTop: "8px",
-            }}
+            className={`btn btn-primary btn-lg mt-2 ${isLoading ? "btn-loading" : ""}`}
           >
             {isLoading ? "Connecting..." : "Connect to Zernio"}
           </button>
@@ -203,9 +187,9 @@ export default function AppIndex() {
     <s-page heading="Zernio">
       <s-section heading="Quick actions">
         <s-stack direction="inline" gap="base">
-          <button type="button" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/products`; }} style={{padding:"8px 20px",fontSize:"14px",fontWeight:600,backgroundColor:"#008060",color:"white",border:"none",borderRadius:"8px",cursor:"pointer"}}>Browse products</button>
-          <button type="button" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/posts`; }} style={{padding:"8px 20px",fontSize:"14px",fontWeight:600,backgroundColor:"#008060",color:"white",border:"none",borderRadius:"8px",cursor:"pointer"}}>View posts</button>
-          <button type="button" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/settings`; }} style={{padding:"8px 20px",fontSize:"14px",fontWeight:600,backgroundColor:"#ddd",color:"#333",border:"none",borderRadius:"8px",cursor:"pointer"}}>Settings</button>
+          <button type="button" className="btn btn-primary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/products`; }}>Browse products</button>
+          <button type="button" className="btn btn-primary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/posts`; }}>View posts</button>
+          <button type="button" className="btn btn-secondary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/settings`; }}>Settings</button>
         </s-stack>
       </s-section>
 

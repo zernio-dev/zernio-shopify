@@ -184,31 +184,21 @@ export default function Settings() {
         {keyError && (
           <s-banner tone="critical">{keyError}</s-banner>
         )}
-        <label>
-          <s-text fontWeight="bold">New API key</s-text>
+        <label className="form-label">
+          <span className="form-label-text">New API key</span>
           <input
             id="apiKeyInput"
             type="password"
             placeholder="sk_..."
             autoComplete="off"
-            style={{ width: "100%", padding: "8px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "8px", marginTop: "4px", fontFamily: "inherit" }}
+            className="input"
           />
         </label>
         <button
           type="button"
           disabled={keySubmitState === "sending"}
           onClick={handleUpdateKey}
-          style={{
-            padding: "8px 20px",
-            fontSize: "14px",
-            fontWeight: 600,
-            backgroundColor: keySubmitState === "sending" ? "#999" : "#333",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: keySubmitState === "sending" ? "wait" : "pointer",
-            marginTop: "8px",
-          }}
+          className={`btn btn-secondary mt-2 ${keySubmitState === "sending" ? "btn-loading" : ""}`}
         >
           {keySubmitState === "sending" ? "Updating..." : "Update key"}
         </button>
@@ -221,12 +211,12 @@ export default function Settings() {
         )}
 
         {loaderData.profiles && loaderData.profiles.length > 0 && (
-          <label>
-            <s-text fontWeight="bold">Default Zernio profile</s-text>
+          <label className="form-label">
+            <span className="form-label-text">Default Zernio profile</span>
             <select
               id="profileIdSelect"
               defaultValue={loaderData.defaultProfileId || ""}
-              style={{ width: "100%", padding: "8px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "8px", marginTop: "4px", fontFamily: "inherit" }}
+              className="select"
             >
               <option value="">None</option>
               {loaderData.profiles.map(
@@ -240,16 +230,16 @@ export default function Settings() {
           </label>
         )}
 
-        <label style={{ display: "block", marginTop: "12px" }}>
-          <s-text fontWeight="bold">Default timezone</s-text>
+        <label className="form-label">
+          <span className="form-label-text">Default timezone</span>
           <input
             id="timezoneInput"
             type="text"
             defaultValue={loaderData.defaultTimezone}
             placeholder="America/New_York"
-            style={{ width: "100%", padding: "8px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "8px", marginTop: "4px", fontFamily: "inherit" }}
+            className="input"
           />
-          <s-text tone="subdued">IANA timezone, e.g. America/New_York</s-text>
+          <span className="form-help-text">IANA timezone, e.g. America/New_York</span>
         </label>
 
         <s-heading>Auto-post triggers</s-heading>
@@ -257,7 +247,7 @@ export default function Settings() {
           When enabled, the app automatically creates social posts when
           products change in your Shopify store.
         </s-paragraph>
-        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <label className="checkbox-label">
           <input
             type="checkbox"
             id="autoPostNewProducts"
@@ -265,7 +255,7 @@ export default function Settings() {
           />
           <span>Auto-post new products</span>
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <label className="checkbox-label">
           <input
             type="checkbox"
             id="autoPostBackInStock"
@@ -273,7 +263,7 @@ export default function Settings() {
           />
           <span>Auto-post when products are back in stock</span>
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <label className="checkbox-label">
           <input
             type="checkbox"
             id="autoPostPriceDrop"
@@ -286,17 +276,7 @@ export default function Settings() {
           type="button"
           disabled={settingsSubmitState === "sending"}
           onClick={handleUpdateSettings}
-          style={{
-            padding: "10px 32px",
-            fontSize: "14px",
-            fontWeight: 600,
-            backgroundColor: settingsSubmitState === "sending" ? "#999" : "#008060",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: settingsSubmitState === "sending" ? "wait" : "pointer",
-            marginTop: "12px",
-          }}
+          className={`btn btn-primary btn-lg mt-3 ${settingsSubmitState === "sending" ? "btn-loading" : ""}`}
         >
           {settingsSubmitState === "sending" ? "Saving..." : "Save settings"}
         </button>
