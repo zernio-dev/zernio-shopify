@@ -1,5 +1,14 @@
 # Learn more: https://shopify.dev/docs/apps/build/cli-for-apps/app-configuration
+name = "Zernio"
 client_id = "ee20ee832fea8bfbc7fe61e1c960b935"
+application_url = "https://zernio-shopify.vercel.app"
+embedded = true
+
+[auth]
+redirect_urls = [
+  "https://zernio-shopify.vercel.app/auth/callback",
+  "https://zernio-shopify.vercel.app/auth/shopify/callback",
+]
 
 [access_scopes]
 scopes = "read_products"
