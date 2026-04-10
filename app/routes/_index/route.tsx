@@ -1,6 +1,8 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { redirect, Form, useLoaderData } from "react-router";
+
 import { login } from "../../shopify.server";
+
 import styles from "./styles.module.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -18,125 +20,64 @@ export default function Index() {
 
   return (
     <div className={styles.page}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <span className={styles.logo}>Zernio</span>
-          <nav className={styles.headerNav}>
-            <a href="https://zernio.com" className={styles.headerLink}>
-              Website
-            </a>
-            <a href="https://docs.zernio.com" className={styles.headerLink}>
-              Docs
-            </a>
-            <a
-              href="https://admin.shopify.com/oauth/install?client_id=ee20ee832fea8bfbc7fe61e1c960b935"
-              className={styles.ctaSmall}
-            >
-              Install app
-            </a>
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <main className={styles.hero}>
-        <div className={styles.heroContent}>
-          <h1 className={styles.heading}>
-            Schedule social posts
-            <br />
-            for your Shopify products
-          </h1>
-          <p className={styles.subheading}>
-            Connect your store to 14+ social platforms. Turn product launches
-            into scheduled posts across Instagram, TikTok, X, LinkedIn, Facebook,
-            and more, all from your Shopify admin.
+      <div className={styles.card}>
+        {/* Coral gradient banner */}
+        <div className={styles.banner}>
+          <div className={styles.logos}>
+            <span className={styles.zernioLogo}>zernio</span>
+            <span className={styles.times}>&times;</span>
+            <div className={styles.shopifyLogo}>
+              <svg className={styles.shopifyIcon} viewBox="0 0 109.5 124.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M95.6 28.2c-.1-.6-.6-1-1.1-1-.5 0-10.3-1.8-10.3-1.8s-6.8-6.8-7.5-7.5c-.7-.7-2.1-.5-2.6-.3 0 0-1.4.4-3.6 1.1-.4-1.2-.9-2.6-1.7-4.1-2.5-4.8-6.1-7.3-10.5-7.3h-.3c-1.5-1.9-3.4-2.7-5-2.7-12.4.4-18.3 15.5-20.2 23.4-4.8 1.5-8.2 2.5-8.6 2.7-2.7.8-2.8.9-3.1 3.5-.3 1.9-7.3 56.2-7.3 56.2l54.8 10.3 29.7-6.4S95.7 28.8 95.6 28.2zM67.3 21.4l-5.7 1.8c0-3-.4-7.4-1.7-11.1 4.3.8 6.4 5.6 7.4 9.3zm-9.7 3l-12.3 3.8c1.2-4.6 3.5-9.2 6.3-12.2 1.1-1.1 2.5-2.3 4.2-3 1.7 3.5 1.8 8.5 1.8 11.4zm-8-16.9c1.4 0 2.5.5 3.5 1.4-4 1.9-8.2 6.7-10 16.3l-9.7 3c2.1-9.2 7.8-20.7 16.2-20.7z" fill="white"/>
+              </svg>
+              <span className={styles.shopifyText}>Shopify</span>
+            </div>
+          </div>
+          <p className={styles.tagline}>
+            Schedule social posts for your products across 14+ platforms
           </p>
-          <div className={styles.ctaGroup}>
-            <a
-              href="https://admin.shopify.com/oauth/install?client_id=ee20ee832fea8bfbc7fe61e1c960b935"
-              className={styles.ctaPrimary}
-            >
-              Install on Shopify
-            </a>
-            <a href="https://docs.zernio.com" className={styles.ctaSecondary}>
-              Read the docs
-            </a>
-          </div>
         </div>
-      </main>
 
-      {/* Features */}
-      <section className={styles.features}>
-        <div className={styles.featuresGrid}>
-          <div className={styles.feature}>
-            <div className={styles.featureIcon}>&#128197;</div>
-            <h3 className={styles.featureTitle}>Schedule posts</h3>
-            <p className={styles.featureDesc}>
-              Pick a date and time, or publish immediately. Posts go out
-              automatically via the Zernio scheduling engine.
-            </p>
+        {/* Body */}
+        <div className={styles.body}>
+          <div className={styles.platforms}>
+            {["Instagram", "TikTok", "X", "Facebook", "LinkedIn", "YouTube", "Threads", "Pinterest", "Bluesky", "Reddit", "Telegram"].map(p => (
+              <span key={p} className={styles.platform}>{p}</span>
+            ))}
           </div>
-          <div className={styles.feature}>
-            <div className={styles.featureIcon}>&#127760;</div>
-            <h3 className={styles.featureTitle}>14+ platforms</h3>
-            <p className={styles.featureDesc}>
-              Instagram, TikTok, X, Facebook, LinkedIn, YouTube, Threads,
-              Pinterest, Telegram, Bluesky, and more.
-            </p>
-          </div>
-          <div className={styles.feature}>
-            <div className={styles.featureIcon}>&#128230;</div>
-            <h3 className={styles.featureTitle}>Product-first</h3>
-            <p className={styles.featureDesc}>
-              Auto-fills captions, images, and store links from your product
-              catalog. Share in two clicks.
-            </p>
-          </div>
+
+          <a
+            href="https://admin.shopify.com/oauth/install?client_id=ee20ee832fea8bfbc7fe61e1c960b935"
+            className={styles.installBtn}
+          >
+            Install on Shopify
+          </a>
+
+          {showForm && (
+            <>
+              <div className={styles.divider}>or log in</div>
+              <Form className={styles.loginForm} method="post" action="/auth/login">
+                <input
+                  className={styles.loginInput}
+                  type="text"
+                  name="shop"
+                  placeholder="your-store.myshopify.com"
+                />
+                <button className={styles.loginBtn} type="submit">
+                  Go
+                </button>
+              </Form>
+            </>
+          )}
         </div>
-      </section>
 
-      {/* Manual login (fallback for non-install flows) */}
-      {showForm && (
-        <section className={styles.loginSection}>
-          <h2 className={styles.loginHeading}>Already installed?</h2>
-          <p className={styles.loginText}>
-            Enter your shop domain to open the app.
-          </p>
-          <Form className={styles.form} method="post" action="/auth/login">
-            <input
-              className={styles.input}
-              type="text"
-              name="shop"
-              placeholder="my-shop.myshopify.com"
-            />
-            <button className={styles.loginButton} type="submit">
-              Log in
-            </button>
-          </Form>
-        </section>
-      )}
-
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <span className={styles.footerBrand}>Zernio</span>
-          <div className={styles.footerLinks}>
-            <a href="https://zernio.com" className={styles.footerLink}>
-              zernio.com
-            </a>
-            <a href="https://docs.zernio.com" className={styles.footerLink}>
-              Documentation
-            </a>
-            <a
-              href="https://github.com/zernio-dev/zernio-shopify"
-              className={styles.footerLink}
-            >
-              Source code
-            </a>
-          </div>
+        {/* Footer links */}
+        <div className={styles.footer}>
+          <a href="https://zernio.com" className={styles.footerLink}>zernio.com</a>
+          <a href="https://docs.zernio.com" className={styles.footerLink}>docs</a>
+          <a href="https://github.com/zernio-dev/zernio-shopify" className={styles.footerLink}>source</a>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }

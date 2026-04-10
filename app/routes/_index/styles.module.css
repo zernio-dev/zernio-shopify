@@ -1,363 +1,220 @@
-/* Landing page styles - dark/light friendly */
+/* Zernio for Shopify - Landing page */
 
 .page {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: #1a1a2e;
-  background: #ffffff;
+  align-items: center;
+  justify-content: center;
+  background: #F0EFEB;
+  font-family: Menlo, Consolas, Monaco, 'Liberation Mono', 'Courier New', monospace;
+  padding: 2rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .page {
-    color: #e8e8f0;
-    background: #0f0f1a;
-  }
+.card {
+  max-width: 480px;
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
-/* Header */
-
-.header {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 0 1.5rem;
+/* Top banner - coral gradient */
+.banner {
+  background: linear-gradient(135deg, #EB3514 0%, #660202 100%);
+  padding: 2.5rem 2rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
-@media (prefers-color-scheme: dark) {
-  .header {
-    border-bottom-color: #2a2a3d;
-  }
+/* Subtle pattern overlay */
+.banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.08) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 50%);
 }
 
-.headerInner {
-  max-width: 960px;
-  margin: 0 auto;
+.logos {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 56px;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
 }
 
-.logo {
-  font-size: 1.25rem;
+.zernioLogo {
+  font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #6c3ce9;
-}
-
-.headerNav {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.headerLink {
-  font-size: 0.875rem;
-  color: #6b7280;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.headerLink:hover {
-  color: #1a1a2e;
-}
-
-@media (prefers-color-scheme: dark) {
-  .headerLink {
-    color: #9ca3af;
-  }
-  .headerLink:hover {
-    color: #e8e8f0;
-  }
-}
-
-.ctaSmall {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #fff;
-  background: #6c3ce9;
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  text-decoration: none;
-  transition: background 0.15s;
-}
-
-.ctaSmall:hover {
-  background: #5a2dd1;
-}
-
-/* Hero */
-
-.hero {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 1.5rem;
-}
-
-.heroContent {
-  max-width: 640px;
-  text-align: center;
-}
-
-.heading {
-  font-size: 2.75rem;
-  font-weight: 800;
+  color: #FFFFFF;
   letter-spacing: -0.03em;
-  line-height: 1.15;
-  margin: 0 0 1.25rem;
 }
 
-@media (max-width: 600px) {
-  .heading {
-    font-size: 2rem;
-  }
+.times {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1.25rem;
+  font-weight: 300;
 }
 
-.subheading {
-  font-size: 1.125rem;
+.shopifyLogo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.shopifyIcon {
+  width: 28px;
+  height: 28px;
+}
+
+.shopifyText {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.tagline {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8125rem;
   line-height: 1.6;
-  color: #6b7280;
-  margin: 0 0 2rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .subheading {
-    color: #9ca3af;
-  }
-}
-
-.ctaGroup {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.ctaPrimary {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fff;
-  background: #6c3ce9;
-  padding: 0.75rem 2rem;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: background 0.15s;
-}
-
-.ctaPrimary:hover {
-  background: #5a2dd1;
-}
-
-.ctaSecondary {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #6b7280;
-  background: transparent;
-  padding: 0.75rem 2rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.ctaSecondary:hover {
-  color: #1a1a2e;
-  border-color: #9ca3af;
-}
-
-@media (prefers-color-scheme: dark) {
-  .ctaSecondary {
-    color: #9ca3af;
-    border-color: #3a3a4d;
-  }
-  .ctaSecondary:hover {
-    color: #e8e8f0;
-    border-color: #6b7280;
-  }
-}
-
-/* Features */
-
-.features {
-  padding: 3rem 1.5rem 4rem;
-  background: #f9fafb;
-}
-
-@media (prefers-color-scheme: dark) {
-  .features {
-    background: #161625;
-  }
-}
-
-.featuresGrid {
-  max-width: 960px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-}
-
-@media (max-width: 700px) {
-  .featuresGrid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-.feature {
-  text-align: center;
-  padding: 1.5rem 1rem;
-}
-
-.featureIcon {
-  font-size: 2rem;
-  margin-bottom: 0.75rem;
-}
-
-.featureTitle {
-  font-size: 1rem;
-  font-weight: 650;
-  margin: 0 0 0.5rem;
-}
-
-.featureDesc {
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: #6b7280;
   margin: 0;
+  position: relative;
 }
 
-@media (prefers-color-scheme: dark) {
-  .featureDesc {
-    color: #9ca3af;
-  }
+/* Body content */
+.body {
+  padding: 2rem;
 }
 
-/* Login section */
+.platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+}
 
-.loginSection {
-  padding: 2.5rem 1.5rem;
+.platform {
+  font-size: 0.6875rem;
+  color: #6B6B6B;
+  background: #F0EFEB;
+  padding: 0.25rem 0.625rem;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.installBtn {
+  display: block;
+  width: 100%;
+  padding: 0.875rem;
+  background: #EB3514;
+  color: #FFFFFF;
+  font-family: Menlo, Consolas, Monaco, monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   text-align: center;
-  border-top: 1px solid #e5e7eb;
+  text-decoration: none;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
 }
 
-@media (prefers-color-scheme: dark) {
-  .loginSection {
-    border-top-color: #2a2a3d;
-  }
+.installBtn:hover {
+  background: #d42f10;
+  transform: translateY(-1px);
 }
 
-.loginHeading {
-  font-size: 1.125rem;
-  font-weight: 650;
-  margin: 0 0 0.5rem;
+.installBtn:active {
+  transform: translateY(0);
 }
 
-.loginText {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0 0 1rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .loginText {
-    color: #9ca3af;
-  }
-}
-
-.form {
+.divider {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  color: #6B6B6B;
+  font-size: 0.6875rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #D9D8D3;
+}
+
+.loginForm {
+  display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
-.input {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  width: 260px;
-  max-width: 100%;
-  background: #fff;
-  color: #1a1a2e;
+.loginInput {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  font-family: Menlo, Consolas, Monaco, monospace;
+  font-size: 0.75rem;
+  color: #2D2D2D;
+  background: #F0EFEB;
+  border: 1px solid #D9D8D3;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s;
 }
 
-@media (prefers-color-scheme: dark) {
-  .input {
-    background: #1e1e30;
-    border-color: #3a3a4d;
-    color: #e8e8f0;
-  }
+.loginInput:focus {
+  border-color: #EB3514;
 }
 
-.loginButton {
-  padding: 0.5rem 1.25rem;
-  font-size: 0.875rem;
+.loginInput::placeholder {
+  color: #A57070;
+}
+
+.loginBtn {
+  padding: 0.625rem 1rem;
+  font-family: Menlo, Consolas, Monaco, monospace;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #fff;
-  background: #6c3ce9;
-  border: none;
-  border-radius: 6px;
+  color: #2D2D2D;
+  background: #FFFFFF;
+  border: 1px solid #D9D8D3;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: border-color 0.15s, background 0.15s;
+  white-space: nowrap;
 }
 
-.loginButton:hover {
-  background: #5a2dd1;
+.loginBtn:hover {
+  background: #F0EFEB;
+  border-color: #6B6B6B;
 }
 
 /* Footer */
-
 .footer {
-  border-top: 1px solid #e5e7eb;
-  padding: 1.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .footer {
-    border-top-color: #2a2a3d;
-  }
-}
-
-.footerInner {
-  max-width: 960px;
-  margin: 0 auto;
+  padding: 0 2rem 1.5rem;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.footerBrand {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #9ca3af;
-}
-
-.footerLinks {
-  display: flex;
+  justify-content: center;
   gap: 1.25rem;
 }
 
 .footerLink {
-  font-size: 0.8125rem;
-  color: #9ca3af;
+  font-size: 0.6875rem;
+  color: #A57070;
   text-decoration: none;
   transition: color 0.15s;
 }
 
 .footerLink:hover {
-  color: #6b7280;
-}
-
-@media (prefers-color-scheme: dark) {
-  .footerLink:hover {
-    color: #d1d5db;
-  }
+  color: #EB3514;
 }
