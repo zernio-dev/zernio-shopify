@@ -110,23 +110,23 @@ export default function AppIndex() {
     }
   }, [productId, shopify]);
 
+  // Track API key value in React state (safer than DOM queries on web components)
+  const [apiKeyValue, setApiKeyValue] = useState("");
+
   // Onboarding
   if (!onboarded && !fetcher.data?.success) {
-    const generateConnect = () => {
-      const input = document.getElementById("zernioApiKey") as HTMLInputElement;
-      const val = input?.value?.trim() || "";
+    const handleConnect = () => {
+      const val = apiKeyValue.trim();
       if (!val.startsWith("sk_")) {
         alert("API key must start with sk_");
         return;
       }
-      // This matches exactly how the official template submits:
-      // fetcher.submit({}, { method: "POST" }) but with data
       fetcher.submit({ apiKey: val }, { method: "POST", action: "/api/verify-key" });
     };
 
     return (
       <s-page heading="Connect to Zernio">
-        <s-button slot="primary-action" onClick={generateConnect}>
+        <s-button slot="primary-action" onClick={handleConnect}>
           Connect
         </s-button>
 
@@ -143,32 +143,24 @@ export default function AppIndex() {
         </s-section>
 
         <s-section heading="API key">
-          <input
-            id="zernioApiKey"
-            type="text"
+          <s-text-field
+            label="API key"
+            name="zernioApiKey"
+            value={apiKeyValue}
             placeholder="sk_..."
             autoComplete="off"
-            className="input"
-          />
+            onChange={(e: any) => setApiKeyValue(e.currentTarget.value)}
+          ></s-text-field>
           {fetcher.data?.error && (
             <s-banner tone="critical">{fetcher.data.error}</s-banner>
           )}
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => {
-              const input = document.getElementById("zernioApiKey") as HTMLInputElement;
-              const val = input?.value?.trim() || "";
-              if (!val.startsWith("sk_")) {
-                alert("API key must start with sk_");
-                return;
-              }
-              fetcher.submit({ apiKey: val }, { method: "POST", action: "/api/verify-key" });
-            }}
-            className={`btn btn-primary btn-lg mt-2 ${isLoading ? "btn-loading" : ""}`}
+          <s-button
+            variant="primary"
+            disabled={isLoading || undefined}
+            onClick={handleConnect}
           >
             {isLoading ? "Connecting..." : "Connect to Zernio"}
-          </button>
+          </s-button>
         </s-section>
 
         {fetcher.data?.success && (
@@ -187,9 +179,9 @@ export default function AppIndex() {
     <s-page heading="Zernio">
       <s-section heading="Quick actions">
         <s-stack direction="inline" gap="base">
-          <button type="button" className="btn btn-primary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/products`; }}>Browse products</button>
-          <button type="button" className="btn btn-primary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/posts`; }}>View posts</button>
-          <button type="button" className="btn btn-secondary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top.location.href = `${b}/apps/zernio/settings`; }}>Settings</button>
+          <s-button variant="primary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top!.location.href = `${b}/apps/zernio/products`; }}>Browse products</s-button>
+          <s-button variant="primary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top!.location.href = `${b}/apps/zernio/posts`; }}>View posts</s-button>
+          <s-button onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top!.location.href = `${b}/apps/zernio/settings`; }}>Settings</s-button>
         </s-stack>
       </s-section>
 

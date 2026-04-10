@@ -86,6 +86,14 @@ export default function Compose() {
     product.onlineStoreUrl ? `\n\n${product.onlineStoreUrl}` : "",
   ].join("") : "";
 
+  // Track form values in React state (safer than DOM queries on web components)
+  const [postContent, setPostContent] = useState(defaultContent);
+  const [publishNow, setPublishNow] = useState(true);
+  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const [selectedMedia, setSelectedMedia] = useState<string[]>(
+    product?.featuredImage?.url ? [product.featuredImage.url] : [],
+  );
+
   // All hooks must be above this line. Early returns below.
 
   if (loaderData.error && !product) {
@@ -113,16 +121,7 @@ export default function Compose() {
   }
 
   const handleSubmit = async () => {
-    const content = (document.getElementById("postContent") as HTMLTextAreaElement)?.value || "";
-    const publishNow = (document.getElementById("publishNow") as HTMLInputElement)?.checked;
-
-    const accountCheckboxes = document.querySelectorAll<HTMLInputElement>('input[name="accounts"]:checked');
-    const selectedAccounts = Array.from(accountCheckboxes).map(cb => cb.value);
-
-    const mediaCheckboxes = document.querySelectorAll<HTMLInputElement>('input[name="media"]:checked');
-    const selectedMedia = Array.from(mediaCheckboxes).map(cb => cb.value);
-
-    if (!content.trim()) { alert("Post content is required"); return; }
+    if (!postContent.trim()) { alert("Post content is required"); return; }
     if (selectedAccounts.length === 0) { alert("Select at least one account"); return; }
 
     setSubmitState("sending");
@@ -131,7 +130,7 @@ export default function Compose() {
     // Use XMLHttpRequest instead of fetch to bypass App Bridge's fetch interceptor
     // which swallows requests in embedded Shopify apps.
     const body = new URLSearchParams();
-    body.append("content", content);
+    body.append("content", postContent);
     body.append("productId", product.id);
     body.append("productTitle", product.title);
     body.append("publishNow", publishNow ? "true" : "false");
@@ -174,15 +173,13 @@ export default function Compose() {
         {loaderData.error && (
           <s-banner tone="warning">{loaderData.error}</s-banner>
         )}
-        <label className="form-label">
-          <span className="form-label-text">Caption</span>
-          <textarea
-            id="postContent"
-            rows={6}
-            defaultValue={defaultContent}
-            className="textarea"
-          />
-        </label>
+        <s-text-area
+          label="Caption"
+          name="postContent"
+          value={postContent}
+          rows={6}
+          onChange={(e: any) => setPostContent(e.currentTarget.value)}
+        ></s-text-area>
       </s-section>
 
       {/* Media */}
@@ -190,17 +187,26 @@ export default function Compose() {
         <s-section heading="Product images">
           <s-paragraph>Select images to include in your post.</s-paragraph>
           <s-stack direction="inline" gap="base">
-            {product.images.nodes.map((img: { id: string; url: string; altText: string | null }) => (
-              <label key={img.id} className="media-checkbox-label">
-                <input
-                  type="checkbox"
-                  name="media"
-                  value={img.url}
-                  defaultChecked={img.url === product.featuredImage?.url}
-                />
-                <s-thumbnail source={img.url} alt={img.altText || product.title} />
-              </label>
-            ))}
+            {product.images.nodes.map((img: { id: string; url: string; altText: string | null }) => {
+              const isSelected = selectedMedia.includes(img.url);
+              return (
+                <s-stack key={img.id} direction="block" gap="small-200" align="center">
+                  <s-checkbox
+                    label=""
+                    name={`media-${img.id}`}
+                    checked={isSelected || undefined}
+                    onChange={() => {
+                      setSelectedMedia((prev) =>
+                        isSelected
+                          ? prev.filter((u) => u !== img.url)
+                          : [...prev, img.url],
+                      );
+                    }}
+                  ></s-checkbox>
+                  <s-thumbnail source={img.url} alt={img.altText || product.title} />
+                </s-stack>
+              );
+            })}
           </s-stack>
         </s-section>
       )}
@@ -213,39 +219,49 @@ export default function Compose() {
           </s-banner>
         ) : (
           <s-stack direction="block" gap="small-200">
-            {accounts.map((acc: { _id: string; platform: string; username: string; isActive: boolean }) => (
-              <label key={acc._id} className={`checkbox-label ${!acc.isActive ? "checkbox-label-dimmed" : ""}`}>
-                <input
-                  type="checkbox"
-                  name="accounts"
-                  value={`${acc.platform}:${acc._id}`}
-                  disabled={!acc.isActive}
-                />
-                <span>{acc.platform} - @{acc.username}</span>
-              </label>
-            ))}
+            {accounts.map((acc: { _id: string; platform: string; username: string; isActive: boolean }) => {
+              const accValue = `${acc.platform}:${acc._id}`;
+              const isChecked = selectedAccounts.includes(accValue);
+              return (
+                <s-checkbox
+                  key={acc._id}
+                  label={`${acc.platform} - @${acc.username}`}
+                  name={`account-${acc._id}`}
+                  checked={isChecked || undefined}
+                  disabled={!acc.isActive || undefined}
+                  onChange={() => {
+                    setSelectedAccounts((prev) =>
+                      isChecked
+                        ? prev.filter((v) => v !== accValue)
+                        : [...prev, accValue],
+                    );
+                  }}
+                ></s-checkbox>
+              );
+            })}
           </s-stack>
         )}
       </s-section>
 
       {/* Schedule */}
       <s-section heading="Schedule">
-        <label className="checkbox-label">
-          <input type="checkbox" id="publishNow" defaultChecked />
-          <span>Publish immediately</span>
-        </label>
+        <s-checkbox
+          label="Publish immediately"
+          name="publishNow"
+          checked={publishNow || undefined}
+          onChange={() => setPublishNow((prev) => !prev)}
+        ></s-checkbox>
       </s-section>
 
       {/* Submit */}
       <s-section>
-        <button
-          type="button"
-          disabled={submitState === "sending"}
+        <s-button
+          variant="primary"
+          disabled={submitState === "sending" || undefined}
           onClick={handleSubmit}
-          className={`btn btn-primary btn-lg ${submitState === "sending" ? "btn-loading" : ""}`}
         >
           {submitState === "sending" ? "Sending..." : "Schedule post"}
-        </button>
+        </s-button>
       </s-section>
     </s-page>
   );

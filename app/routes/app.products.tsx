@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   HeadersFunction,
   LoaderFunctionArgs,
@@ -45,26 +46,29 @@ export default function Products() {
   const shopify = useAppBridge();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const q = formData.get("q") as string;
+  // Track search query in React state for Polaris web component
+  const [searchQuery, setSearchQuery] = useState(search);
+
+  const handleSearch = () => {
+    const q = searchQuery.trim();
     setSearchParams(q ? { q } : {});
   };
 
   return (
     <s-page heading="Products">
       <s-section>
-        <form onSubmit={handleSearch} className="search-form">
-          <input
+        <s-stack direction="inline" gap="base">
+          <s-text-field
+            label="Search products"
+            labelHidden
             name="q"
-            type="text"
+            value={searchQuery}
             placeholder="Search by title, type, vendor..."
-            defaultValue={search}
-            className="input"
-          />
-          <button type="submit" className="btn btn-primary">Search</button>
-        </form>
+            onChange={(e: any) => setSearchQuery(e.currentTarget.value)}
+            onKeyDown={(e: any) => { if (e.key === "Enter") handleSearch(); }}
+          ></s-text-field>
+          <s-button variant="primary" onClick={handleSearch}>Search</s-button>
+        </s-stack>
       </s-section>
 
       <s-section>
@@ -106,18 +110,18 @@ export default function Products() {
                         {product.priceRangeV2.minVariantPrice.amount}
                       </s-text>
                     </s-stack>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-slim"
+                    <s-button
+                      size="slim"
+                      variant="primary"
                       onClick={() => {
                         const host = new URLSearchParams(window.location.search).get("host");
                         const decodedHost = host ? atob(host) : "";
                         const base = decodedHost ? `https://${decodedHost}` : window.top?.location?.origin || "";
-                        window.top.location.href = `${base}/apps/zernio/compose?productId=${encodeURIComponent(product.id)}`;
+                        window.top!.location.href = `${base}/apps/zernio/compose?productId=${encodeURIComponent(product.id)}`;
                       }}
                     >
                       Share to social
-                    </button>
+                    </s-button>
                   </s-stack>
                 </s-box>
               ),

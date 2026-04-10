@@ -66,6 +66,14 @@ export default function Settings() {
   const [settingsSubmitState, setSettingsSubmitState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [settingsError, setSettingsError] = useState("");
 
+  // Track form values in React state (safer than DOM queries on web components)
+  const [apiKeyValue, setApiKeyValue] = useState("");
+  const [profileId, setProfileId] = useState(loaderData.defaultProfileId || "");
+  const [timezone, setTimezone] = useState(loaderData.defaultTimezone || "UTC");
+  const [autoPostNewProducts, setAutoPostNewProducts] = useState(loaderData.autoPostNewProducts || false);
+  const [autoPostBackInStock, setAutoPostBackInStock] = useState(loaderData.autoPostBackInStock || false);
+  const [autoPostPriceDrop, setAutoPostPriceDrop] = useState(loaderData.autoPostPriceDrop || false);
+
   // All hooks must be above this line. Early returns below.
 
   if (!loaderData.configured) {
@@ -86,10 +94,7 @@ export default function Settings() {
    * Uses XMLHttpRequest to bypass App Bridge's fetch interceptor.
    */
   const handleUpdateKey = () => {
-    const apiKeyInput = document.getElementById("apiKeyInput") as HTMLInputElement;
-    const apiKey = apiKeyInput?.value || "";
-
-    if (!apiKey.startsWith("sk_")) {
+    if (!apiKeyValue.startsWith("sk_")) {
       setKeyError("API key must start with sk_");
       return;
     }
@@ -99,7 +104,7 @@ export default function Settings() {
 
     const body = new URLSearchParams();
     body.append("intent", "update-key");
-    body.append("apiKey", apiKey);
+    body.append("apiKey", apiKeyValue);
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/update-settings", true);
@@ -128,16 +133,9 @@ export default function Settings() {
 
   /**
    * Submit preferences update via XHR to /api/update-settings.
-   * Reads native HTML input values directly from the DOM since
-   * Polaris web components don't participate in form submission.
+   * Reads values from React state (Polaris web components update state via onChange).
    */
   const handleUpdateSettings = () => {
-    const profileId = (document.getElementById("profileIdSelect") as HTMLSelectElement)?.value || "";
-    const timezone = (document.getElementById("timezoneInput") as HTMLInputElement)?.value || "UTC";
-    const autoPostNewProducts = (document.getElementById("autoPostNewProducts") as HTMLInputElement)?.checked;
-    const autoPostBackInStock = (document.getElementById("autoPostBackInStock") as HTMLInputElement)?.checked;
-    const autoPostPriceDrop = (document.getElementById("autoPostPriceDrop") as HTMLInputElement)?.checked;
-
     setSettingsSubmitState("sending");
     setSettingsError("");
 
@@ -184,24 +182,21 @@ export default function Settings() {
         {keyError && (
           <s-banner tone="critical">{keyError}</s-banner>
         )}
-        <label className="form-label">
-          <span className="form-label-text">New API key</span>
-          <input
-            id="apiKeyInput"
-            type="password"
-            placeholder="sk_..."
-            autoComplete="off"
-            className="input"
-          />
-        </label>
-        <button
-          type="button"
-          disabled={keySubmitState === "sending"}
+        <s-text-field
+          label="New API key"
+          name="apiKeyInput"
+          type="password"
+          value={apiKeyValue}
+          placeholder="sk_..."
+          autoComplete="off"
+          onChange={(e: any) => setApiKeyValue(e.currentTarget.value)}
+        ></s-text-field>
+        <s-button
+          disabled={keySubmitState === "sending" || undefined}
           onClick={handleUpdateKey}
-          className={`btn btn-secondary mt-2 ${keySubmitState === "sending" ? "btn-loading" : ""}`}
         >
           {keySubmitState === "sending" ? "Updating..." : "Update key"}
-        </button>
+        </s-button>
       </s-section>
 
       {/* Preferences Section */}
@@ -211,75 +206,63 @@ export default function Settings() {
         )}
 
         {loaderData.profiles && loaderData.profiles.length > 0 && (
-          <label className="form-label">
-            <span className="form-label-text">Default Zernio profile</span>
-            <select
-              id="profileIdSelect"
-              defaultValue={loaderData.defaultProfileId || ""}
-              className="select"
-            >
-              <option value="">None</option>
-              {loaderData.profiles.map(
-                (p: { _id: string; name: string }) => (
-                  <option key={p._id} value={p._id}>
-                    {p.name}
-                  </option>
-                ),
-              )}
-            </select>
-          </label>
+          <s-select
+            label="Default Zernio profile"
+            name="profileIdSelect"
+            value={profileId}
+            onChange={(e: any) => setProfileId(e.currentTarget.value)}
+          >
+            <option value="">None</option>
+            {loaderData.profiles.map(
+              (p: { _id: string; name: string }) => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
+                </option>
+              ),
+            )}
+          </s-select>
         )}
 
-        <label className="form-label">
-          <span className="form-label-text">Default timezone</span>
-          <input
-            id="timezoneInput"
-            type="text"
-            defaultValue={loaderData.defaultTimezone}
-            placeholder="America/New_York"
-            className="input"
-          />
-          <span className="form-help-text">IANA timezone, e.g. America/New_York</span>
-        </label>
+        <s-text-field
+          label="Default timezone"
+          name="timezoneInput"
+          value={timezone}
+          placeholder="America/New_York"
+          helpText="IANA timezone, e.g. America/New_York"
+          onChange={(e: any) => setTimezone(e.currentTarget.value)}
+        ></s-text-field>
 
         <s-heading>Auto-post triggers</s-heading>
         <s-paragraph>
           When enabled, the app automatically creates social posts when
           products change in your Shopify store.
         </s-paragraph>
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            id="autoPostNewProducts"
-            defaultChecked={loaderData.autoPostNewProducts}
-          />
-          <span>Auto-post new products</span>
-        </label>
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            id="autoPostBackInStock"
-            defaultChecked={loaderData.autoPostBackInStock}
-          />
-          <span>Auto-post when products are back in stock</span>
-        </label>
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            id="autoPostPriceDrop"
-            defaultChecked={loaderData.autoPostPriceDrop}
-          />
-          <span>Auto-post on price drops</span>
-        </label>
+        <s-checkbox
+          label="Auto-post new products"
+          name="autoPostNewProducts"
+          checked={autoPostNewProducts || undefined}
+          onChange={() => setAutoPostNewProducts((prev) => !prev)}
+        ></s-checkbox>
+        <s-checkbox
+          label="Auto-post when products are back in stock"
+          name="autoPostBackInStock"
+          checked={autoPostBackInStock || undefined}
+          onChange={() => setAutoPostBackInStock((prev) => !prev)}
+        ></s-checkbox>
+        <s-checkbox
+          label="Auto-post on price drops"
+          name="autoPostPriceDrop"
+          checked={autoPostPriceDrop || undefined}
+          onChange={() => setAutoPostPriceDrop((prev) => !prev)}
+        ></s-checkbox>
 
-        <button
-          type="button"
-          disabled={settingsSubmitState === "sending"}
+        <s-button
+          variant="primary"
+          disabled={settingsSubmitState === "sending" || undefined}
           onClick={handleUpdateSettings}
-          className={`btn btn-primary btn-lg mt-3 ${settingsSubmitState === "sending" ? "btn-loading" : ""}`}
         >
           {settingsSubmitState === "sending" ? "Saving..." : "Save settings"}
-        </button>
+        </s-button>
       </s-section>
 
       <s-section slot="aside" heading="Help">
