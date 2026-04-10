@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
@@ -156,164 +156,180 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Compose() {
   const loaderData = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof action>();
+  const fetcher = useFetcher();
   const shopify = useAppBridge();
   const isSubmitting = fetcher.state !== "idle";
 
-  useEffect(() => {
-    if (fetcher.data?.success) {
-      shopify.toast.show("Post scheduled!");
-    }
-  }, [fetcher.data, shopify]);
+  const [submitState, setSubmitState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [submitError, setSubmitError] = useState("");
+  const [postId, setPostId] = useState("");
 
   if (loaderData.error && !loaderData.product) {
     return (
       <s-page heading="Share to social">
         <s-section>
           <s-banner tone="critical">{loaderData.error}</s-banner>
-          <s-button href="/app/products">Back to products</s-button>
         </s-section>
       </s-page>
     );
   }
 
   const { product, accounts } = loaderData;
-
   if (!product) return null;
 
-  // Build a default caption from product data
   const defaultContent = [
     product.title,
     product.description ? `\n\n${product.description.slice(0, 200)}${product.description.length > 200 ? "..." : ""}` : "",
     product.onlineStoreUrl ? `\n\n${product.onlineStoreUrl}` : "",
   ].join("");
 
-  // Show success state
-  if (fetcher.data?.success) {
+  // Success state
+  if (submitState === "done") {
     return (
       <s-page heading="Post created!">
         <s-section>
           <s-banner tone="success">
             Your post for &quot;{product.title}&quot; has been sent to Zernio.
           </s-banner>
-          <s-stack direction="inline" gap="base">
-            <s-button href="/app/posts">View posts</s-button>
-            <s-button href="/app/products" variant="tertiary">
-              Share another product
-            </s-button>
-          </s-stack>
         </s-section>
       </s-page>
     );
   }
 
+  useEffect(() => {
+    if (fetcher.data?.success) {
+      setSubmitState("done");
+      shopify.toast.show("Post created!");
+    } else if (fetcher.data?.error) {
+      setSubmitState("error");
+      setSubmitError(fetcher.data.error);
+    }
+  }, [fetcher.data, shopify]);
+
+  const handleSubmit = () => {
+    const content = (document.getElementById("postContent") as HTMLTextAreaElement)?.value || "";
+    const publishNow = (document.getElementById("publishNow") as HTMLInputElement)?.checked;
+
+    const accountCheckboxes = document.querySelectorAll<HTMLInputElement>('input[name="accounts"]:checked');
+    const selectedAccounts = Array.from(accountCheckboxes).map(cb => cb.value);
+
+    const mediaCheckboxes = document.querySelectorAll<HTMLInputElement>('input[name="media"]:checked');
+    const selectedMedia = Array.from(mediaCheckboxes).map(cb => cb.value);
+
+    if (!content.trim()) { alert("Post content is required"); return; }
+    if (selectedAccounts.length === 0) { alert("Select at least one account"); return; }
+
+    setSubmitState("sending");
+    setSubmitError("");
+
+    // Build a plain object for fetcher.submit (same pattern as verify-key)
+    const data: Record<string, string> = {
+      content,
+      productId: product.id,
+      productTitle: product.title,
+      publishNow: publishNow ? "true" : "false",
+      timezone: loaderData.defaultTimezone || "UTC",
+    };
+    // fetcher.submit doesn't support arrays, so join with commas
+    data.accounts = selectedAccounts.join(",");
+    data.media = selectedMedia.join(",");
+
+    fetcher.submit(data, { method: "POST", action: "/api/create-post" });
+  };
+
   return (
     <s-page heading="Share to social" subtitle={product.title}>
-      <s-button slot="primary-action" href="/app/products" variant="tertiary">
-        Back
-      </s-button>
-
-      <fetcher.Form method="post">
-        <input type="hidden" name="productId" value={product.id} />
-        <input type="hidden" name="productTitle" value={product.title} />
-        <input
-          type="hidden"
-          name="timezone"
-          value={loaderData.defaultTimezone || "UTC"}
-        />
-
-        {/* Content */}
-        <s-section heading="Post content">
-          {fetcher.data?.error && (
-            <s-banner tone="critical">{fetcher.data.error}</s-banner>
-          )}
-          {loaderData.error && (
-            <s-banner tone="warning">{loaderData.error}</s-banner>
-          )}
-          <s-text-area
-            name="content"
-            label="Caption"
+      {/* Content */}
+      <s-section heading="Post content">
+        {submitError && (
+          <s-banner tone="critical">{submitError}</s-banner>
+        )}
+        {loaderData.error && (
+          <s-banner tone="warning">{loaderData.error}</s-banner>
+        )}
+        <label>
+          <s-text fontWeight="bold">Caption</s-text>
+          <textarea
+            id="postContent"
             rows={6}
             defaultValue={defaultContent}
+            style={{ width: "100%", padding: "8px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "8px", marginTop: "4px", fontFamily: "inherit" }}
           />
-        </s-section>
+        </label>
+      </s-section>
 
-        {/* Media selection */}
-        {product.images.nodes.length > 0 && (
-          <s-section heading="Product images">
-            <s-paragraph>Select images to include in your post.</s-paragraph>
-            <s-stack direction="inline" gap="base">
-              {product.images.nodes.map((img) => (
-                <label key={img.id} style={{ cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    name="media"
-                    value={img.url}
-                    defaultChecked={
-                      img.url === product.featuredImage?.url
-                    }
-                    style={{ marginRight: "4px" }}
-                  />
-                  <s-thumbnail
-                    source={img.url}
-                    alt={img.altText || product.title}
-                  />
-                </label>
-              ))}
-            </s-stack>
-          </s-section>
-        )}
-
-        {/* Account selection */}
-        <s-section heading="Post to">
-          {accounts.length === 0 ? (
-            <s-banner tone="warning">
-              No social accounts found. Connect accounts in your{" "}
-              <s-link href="https://zernio.com/dashboard" target="_blank">
-                Zernio dashboard
-              </s-link>
-              .
-            </s-banner>
-          ) : (
-            <s-choice-list
-              name="accounts"
-              title="Select accounts"
-              allowMultiple
-            >
-              {accounts.map((acc) => (
-                <s-choice
-                  key={acc._id}
-                  value={`${acc.platform}:${acc._id}`}
-                  label={`${acc.platform} - @${acc.username}`}
-                  disabled={!acc.isActive}
+      {/* Media */}
+      {product.images.nodes.length > 0 && (
+        <s-section heading="Product images">
+          <s-paragraph>Select images to include in your post.</s-paragraph>
+          <s-stack direction="inline" gap="base">
+            {product.images.nodes.map((img: { id: string; url: string; altText: string | null }) => (
+              <label key={img.id} style={{ cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  name="media"
+                  value={img.url}
+                  defaultChecked={img.url === product.featuredImage?.url}
+                  style={{ marginRight: "4px" }}
                 />
-              ))}
-            </s-choice-list>
-          )}
-        </s-section>
-
-        {/* Scheduling */}
-        <s-section heading="Schedule">
-          <s-stack direction="block" gap="base">
-            <s-date-field
-              name="scheduledFor"
-              label="Schedule for (leave empty to publish now)"
-            />
-            <s-checkbox name="publishNow" value="true" label="Publish immediately" />
+                <s-thumbnail source={img.url} alt={img.altText || product.title} />
+              </label>
+            ))}
           </s-stack>
         </s-section>
+      )}
 
-        {/* Submit */}
-        <s-section>
-          <s-button
-            type="submit"
-            variant="primary"
-            {...(isSubmitting ? { loading: true } : {})}
-          >
-            {isSubmitting ? "Sending..." : "Schedule post"}
-          </s-button>
-        </s-section>
-      </fetcher.Form>
+      {/* Accounts */}
+      <s-section heading="Post to">
+        {accounts.length === 0 ? (
+          <s-banner tone="warning">
+            No social accounts found. Connect accounts at zernio.com.
+          </s-banner>
+        ) : (
+          <s-stack direction="block" gap="small-200">
+            {accounts.map((acc: { _id: string; platform: string; username: string; isActive: boolean }) => (
+              <label key={acc._id} style={{ display: "flex", alignItems: "center", gap: "8px", opacity: acc.isActive ? 1 : 0.5 }}>
+                <input
+                  type="checkbox"
+                  name="accounts"
+                  value={`${acc.platform}:${acc._id}`}
+                  disabled={!acc.isActive}
+                />
+                <span>{acc.platform} - @{acc.username}</span>
+              </label>
+            ))}
+          </s-stack>
+        )}
+      </s-section>
+
+      {/* Schedule */}
+      <s-section heading="Schedule">
+        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <input type="checkbox" id="publishNow" defaultChecked />
+          <span>Publish immediately</span>
+        </label>
+      </s-section>
+
+      {/* Submit */}
+      <s-section>
+        <button
+          type="button"
+          disabled={submitState === "sending"}
+          onClick={handleSubmit}
+          style={{
+            padding: "10px 32px",
+            fontSize: "14px",
+            fontWeight: 600,
+            backgroundColor: submitState === "sending" ? "#999" : "#008060",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: submitState === "sending" ? "wait" : "pointer",
+          }}
+        >
+          {submitState === "sending" ? "Sending..." : "Schedule post"}
+        </button>
+      </s-section>
     </s-page>
   );
 }
