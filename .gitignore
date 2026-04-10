@@ -55,3 +55,4 @@ vite.config.ts.timestamp-*
 *.png
 auth.json
 test-*.mjs
+auth.json
