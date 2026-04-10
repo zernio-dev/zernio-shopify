@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Required by @shopify/shopify-app-session-storage-prisma.
+// Field names and types must match exactly.
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+
+  @@index([shop])
+}
+
+// Stores the Zernio API key and preferences for each Shopify store.
+// One ShopConfig per shop domain.
+model ShopConfig {
+  id                    String   @id @default(cuid())
+  shop                  String   @unique
+  zernioApiKeyEncrypted String // AES-256-GCM encrypted API key
+  zernioApiKeyPreview   String? // e.g. "sk_12ab...cd34" (safe to display)
+  defaultProfileId      String? // Default Zernio profile ID for posting
+  defaultTimezone       String   @default("UTC")
+  onboardingComplete    Boolean  @default(false)
+
+  // Auto-post toggles (Phase 2 - UI-ready, not wired to webhooks yet)
+  autoPostNewProducts Boolean @default(false)
+  autoPostBackInStock Boolean @default(false)
+  autoPostPriceDrop   Boolean @default(false)
+
+  // Zernio webhook for receiving post status updates
+  zernioWebhookId     String?
+  zernioWebhookSecret String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  postLogs      PostLog[]
+  postTemplates PostTemplate[]
+}
+
+// Customizable content templates for generating post text from product data.
+// Supports mustache-style variables: {{title}}, {{price}}, {{url}}, {{description}}.
+model PostTemplate {
+  id              String     @id @default(cuid())
+  shopConfigId    String
+  shopConfig      ShopConfig @relation(fields: [shopConfigId], references: [id], onDelete: Cascade)
+  name            String
+  triggerType     String // "manual", "new_product", "back_in_stock", "price_drop"
+  contentTemplate String // e.g. "Check out {{title}}! Now only {{price}} -> {{url}}"
+  platforms       String[] // e.g. ["instagram", "twitter"]
+  accountIds      String[] // Zernio social account IDs
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Tracks every post sent to Zernio so we can display status in the Shopify admin
+// without polling the Zernio API on every page load. Status updates arrive via
+// Zernio webhooks (Phase 2).
+model PostLog {
+  id                  String     @id @default(cuid())
+  shopConfigId        String
+  shopConfig          ShopConfig @relation(fields: [shopConfigId], references: [id], onDelete: Cascade)
+  shopifyProductId    String
+  shopifyProductTitle String?
+  zernioPostId        String
+  status              String     @default("pending") // pending, scheduled, published, failed, partial
+  triggerType         String // "manual", "new_product", "back_in_stock", "price_drop"
+  platforms           String[]
+  scheduledFor        DateTime?
+  publishedAt         DateTime?
+  errorMessage        String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@index([shopConfigId])
+  @@index([shopifyProductId])
+  @@index([zernioPostId])
+}

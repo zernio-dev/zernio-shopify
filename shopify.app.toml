@@ -1,0 +1,21 @@
+# Learn more: https://shopify.dev/docs/apps/build/cli-for-apps/app-configuration
+client_id = ""
+
+[access_scopes]
+scopes = "read_products"
+
+[webhooks]
+api_version = "2025-10"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = ["app/uninstalled"]
+
+  [[webhooks.subscriptions]]
+  topics = ["app/scopes_update"]
+  uri = "/webhooks/app/scopes-update"
+
+  # Mandatory GDPR compliance webhooks
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/compliance"
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
