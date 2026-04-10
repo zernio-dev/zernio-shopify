@@ -8,9 +8,7 @@ import { ZernioClient } from "../lib/zernio-client";
  * Skips authenticate.admin() (same pattern as api.verify-key).
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  console.log("[zernio] create-post action called");
-
-  // Get shop from DB session
+  // Get shop from the most recent offline DB session
   const recentSession = await db.session.findFirst({
     orderBy: { id: "desc" },
     where: { isOnline: false },
@@ -32,7 +30,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const content = formData.get("content") as string;
   const productId = formData.get("productId") as string;
   const productTitle = formData.get("productTitle") as string;
-  // accounts and media come as comma-separated strings from fetcher.submit
+  // Accounts and media come as comma-separated strings from the XHR submit
   const accountsRaw = formData.get("accounts") as string || "";
   const mediaRaw = formData.get("media") as string || "";
   const selectedAccounts = accountsRaw ? accountsRaw.split(",") : [];
@@ -40,10 +38,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const scheduledFor = formData.get("scheduledFor") as string;
   const publishNow = formData.get("publishNow") === "true";
   const timezone = formData.get("timezone") as string;
-
-  console.log("[zernio] content:", content?.substring(0, 50));
-  console.log("[zernio] accounts:", selectedAccounts.length);
-  console.log("[zernio] publishNow:", publishNow);
 
   if (!content?.trim()) {
     return Response.json({ error: "Post content is required" });
@@ -53,7 +47,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return Response.json({ error: "Select at least one social account" });
   }
 
-  // Build platforms array
+  // Build platforms array: each selected account is "platform:accountId"
   const platforms = selectedAccounts.map((acc) => {
     const [platform, accountId] = acc.split(":");
     return {
@@ -82,9 +76,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       },
     });
 
-    console.log("[zernio] post created:", post._id);
-
-    // Log locally
+    // Log locally for status tracking
     await db.postLog.create({
       data: {
         shopConfigId: config.id,
@@ -100,7 +92,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     return Response.json({ success: true, postId: post._id });
   } catch (err) {
-    console.error("[zernio] create-post error:", err);
     const message = err instanceof Error ? err.message : "Failed to create post";
     return Response.json({ error: message });
   }

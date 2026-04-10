@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type {
-  ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
@@ -65,90 +64,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 };
 
-// ---------------------------------------------------------------------------
-// Action: Create a post via Zernio API
-// ---------------------------------------------------------------------------
-
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
-  const formData = await request.formData();
-
-  const config = await db.shopConfig.findUnique({
-    where: { shop: session.shop },
-  });
-  if (!config) return { error: "Not configured" };
-
-  const apiKey = decrypt(config.zernioApiKeyEncrypted);
-  const client = new ZernioClient(apiKey);
-
-  const content = formData.get("content") as string;
-  const productId = formData.get("productId") as string;
-  const productTitle = formData.get("productTitle") as string;
-  const selectedAccounts = formData.getAll("accounts") as string[];
-  const mediaUrls = formData.getAll("media") as string[];
-  const scheduledFor = formData.get("scheduledFor") as string;
-  const publishNow = formData.get("publishNow") === "true";
-  const timezone = formData.get("timezone") as string;
-
-  if (!content?.trim()) {
-    return { error: "Post content is required" };
-  }
-
-  if (selectedAccounts.length === 0) {
-    return { error: "Select at least one social account" };
-  }
-
-  // Build platforms array: each selected account becomes a platform entry.
-  // Account format is "platform:accountId" (set in the checkbox value).
-  const platforms = selectedAccounts.map((acc) => {
-    const [platform, accountId] = acc.split(":");
-    return {
-      platform,
-      accountId,
-      ...(scheduledFor && !publishNow ? { scheduledFor } : {}),
-    };
-  });
-
-  const mediaItems = mediaUrls
-    .filter(Boolean)
-    .map((url) => ({ type: "image" as const, url }));
-
-  try {
-    const post = await client.createPost({
-      content,
-      mediaItems: mediaItems.length > 0 ? mediaItems : undefined,
-      platforms,
-      ...(publishNow ? { publishNow: true } : {}),
-      ...(scheduledFor && !publishNow ? { scheduledFor } : {}),
-      timezone: timezone || config.defaultTimezone,
-      metadata: {
-        source: "shopify",
-        productId,
-        shopDomain: session.shop,
-      },
-    });
-
-    // Log locally for status tracking
-    await db.postLog.create({
-      data: {
-        shopConfigId: config.id,
-        shopifyProductId: productId,
-        shopifyProductTitle: productTitle,
-        zernioPostId: post._id,
-        status: publishNow ? "publishing" : "scheduled",
-        triggerType: "manual",
-        platforms: platforms.map((p) => p.platform),
-        scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
-      },
-    });
-
-    return { success: true, postId: post._id };
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Failed to create post";
-    return { error: message };
-  }
-};
+// No action handler here. Post creation uses XHR to /api/create-post to
+// bypass the authenticate.admin() 410 issue on POST in embedded apps.
 
 // ---------------------------------------------------------------------------
 // Component

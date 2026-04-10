@@ -17,16 +17,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
-  console.log("[zernio] ACTION in app.tsx for", shop);
-
   const { ZernioClient } = await import("../lib/zernio-client");
   const { encrypt, apiKeyPreview } = await import("../lib/encryption.server");
   const db = (await import("../db.server")).default;
 
   const formData = await request.formData();
   const apiKey = formData.get("apiKey") as string;
-
-  console.log("[zernio] apiKey:", apiKey ? apiKey.slice(0, 8) + "..." : "EMPTY");
 
   if (!apiKey?.startsWith("sk_")) {
     return { error: "API key must start with sk_" };
@@ -54,10 +50,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       },
     });
 
-    console.log("[zernio] SUCCESS - onboarding complete");
     return { success: true, plan: user.planName };
-  } catch (err) {
-    console.error("[zernio] error:", err);
+  } catch {
     return { error: "Could not connect to Zernio. Check your API key." };
   }
 };

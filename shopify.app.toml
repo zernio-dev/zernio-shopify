@@ -24,6 +24,11 @@ api_version = "2025-10"
   topics = ["app/scopes_update"]
   uri = "/webhooks/app/scopes-update"
 
+  # Product lifecycle webhooks for auto-posting
+  [[webhooks.subscriptions]]
+  topics = ["products/create", "products/update", "products/delete"]
+  uri = "/webhooks/products"
+
   # Mandatory GDPR compliance webhooks
   [[webhooks.subscriptions]]
   uri = "/webhooks/compliance"

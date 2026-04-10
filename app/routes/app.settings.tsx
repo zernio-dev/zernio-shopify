@@ -1,17 +1,16 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import type {
-  ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { useFetcher, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
-import { decrypt, encrypt, apiKeyPreview } from "../lib/encryption.server";
-import { ZernioClient, ZernioApiError } from "../lib/zernio-client";
+import { decrypt } from "../lib/encryption.server";
+import { ZernioClient } from "../lib/zernio-client";
 
 // ---------------------------------------------------------------------------
 // Loader
@@ -51,62 +50,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   };
 };
 
-// ---------------------------------------------------------------------------
-// Action
-// ---------------------------------------------------------------------------
-
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
-  const formData = await request.formData();
-  const intent = formData.get("intent") as string;
-
-  if (intent === "update-key") {
-    const apiKey = formData.get("apiKey") as string;
-    if (!apiKey?.startsWith("sk_")) {
-      return { error: "API key must start with sk_" };
-    }
-
-    try {
-      const client = new ZernioClient(apiKey);
-      await client.getUser();
-    } catch (err) {
-      if (err instanceof ZernioApiError && err.status === 401) {
-        return { error: "Invalid API key" };
-      }
-      return { error: "Could not verify key. Try again." };
-    }
-
-    await db.shopConfig.update({
-      where: { shop: session.shop },
-      data: {
-        zernioApiKeyEncrypted: encrypt(apiKey),
-        zernioApiKeyPreview: apiKeyPreview(apiKey),
-      },
-    });
-
-    return { success: "API key updated" };
-  }
-
-  if (intent === "update-settings") {
-    const profileId = formData.get("profileId") as string;
-    const timezone = formData.get("timezone") as string;
-
-    await db.shopConfig.update({
-      where: { shop: session.shop },
-      data: {
-        defaultProfileId: profileId || null,
-        defaultTimezone: timezone || "UTC",
-        autoPostNewProducts: formData.get("autoPostNewProducts") === "on",
-        autoPostBackInStock: formData.get("autoPostBackInStock") === "on",
-        autoPostPriceDrop: formData.get("autoPostPriceDrop") === "on",
-      },
-    });
-
-    return { success: "Settings saved" };
-  }
-
-  return null;
-};
+// No action handler here. Form submissions use XHR to /api/update-settings
+// to bypass the authenticate.admin() 410 issue on POST in embedded apps.
 
 // ---------------------------------------------------------------------------
 // Component
@@ -114,14 +59,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Settings() {
   const loaderData = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
 
-  useEffect(() => {
-    if (fetcher.data?.success) {
-      shopify.toast.show(fetcher.data.success);
-    }
-  }, [fetcher.data, shopify]);
+  const [keySubmitState, setKeySubmitState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [keyError, setKeyError] = useState("");
+  const [settingsSubmitState, setSettingsSubmitState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [settingsError, setSettingsError] = useState("");
+
+  // All hooks must be above this line. Early returns below.
 
   if (!loaderData.configured) {
     return (
@@ -136,6 +81,99 @@ export default function Settings() {
     );
   }
 
+  /**
+   * Submit API key update via XHR to /api/update-settings.
+   * Uses XMLHttpRequest to bypass App Bridge's fetch interceptor.
+   */
+  const handleUpdateKey = () => {
+    const apiKeyInput = document.getElementById("apiKeyInput") as HTMLInputElement;
+    const apiKey = apiKeyInput?.value || "";
+
+    if (!apiKey.startsWith("sk_")) {
+      setKeyError("API key must start with sk_");
+      return;
+    }
+
+    setKeySubmitState("sending");
+    setKeyError("");
+
+    const body = new URLSearchParams();
+    body.append("intent", "update-key");
+    body.append("apiKey", apiKey);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/update-settings", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onload = () => {
+      try {
+        const result = JSON.parse(xhr.responseText);
+        if (result.success) {
+          setKeySubmitState("done");
+          shopify.toast.show(result.success);
+        } else {
+          setKeySubmitState("error");
+          setKeyError(result.error || "Unknown error");
+        }
+      } catch {
+        setKeySubmitState("error");
+        setKeyError("Invalid response from server");
+      }
+    };
+    xhr.onerror = () => {
+      setKeySubmitState("error");
+      setKeyError("Network error. Try again.");
+    };
+    xhr.send(body.toString());
+  };
+
+  /**
+   * Submit preferences update via XHR to /api/update-settings.
+   * Reads native HTML input values directly from the DOM since
+   * Polaris web components don't participate in form submission.
+   */
+  const handleUpdateSettings = () => {
+    const profileId = (document.getElementById("profileIdSelect") as HTMLSelectElement)?.value || "";
+    const timezone = (document.getElementById("timezoneInput") as HTMLInputElement)?.value || "UTC";
+    const autoPostNewProducts = (document.getElementById("autoPostNewProducts") as HTMLInputElement)?.checked;
+    const autoPostBackInStock = (document.getElementById("autoPostBackInStock") as HTMLInputElement)?.checked;
+    const autoPostPriceDrop = (document.getElementById("autoPostPriceDrop") as HTMLInputElement)?.checked;
+
+    setSettingsSubmitState("sending");
+    setSettingsError("");
+
+    const body = new URLSearchParams();
+    body.append("intent", "update-settings");
+    body.append("profileId", profileId);
+    body.append("timezone", timezone);
+    if (autoPostNewProducts) body.append("autoPostNewProducts", "on");
+    if (autoPostBackInStock) body.append("autoPostBackInStock", "on");
+    if (autoPostPriceDrop) body.append("autoPostPriceDrop", "on");
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/update-settings", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.onload = () => {
+      try {
+        const result = JSON.parse(xhr.responseText);
+        if (result.success) {
+          setSettingsSubmitState("done");
+          shopify.toast.show(result.success);
+        } else {
+          setSettingsSubmitState("error");
+          setSettingsError(result.error || "Unknown error");
+        }
+      } catch {
+        setSettingsSubmitState("error");
+        setSettingsError("Invalid response from server");
+      }
+    };
+    xhr.onerror = () => {
+      setSettingsSubmitState("error");
+      setSettingsError("Network error. Try again.");
+    };
+    xhr.send(body.toString());
+  };
+
   return (
     <s-page heading="Settings">
       {/* API Key Section */}
@@ -143,32 +181,52 @@ export default function Settings() {
         <s-paragraph>
           Current key: <s-text fontWeight="bold">{loaderData.keyPreview}</s-text>
         </s-paragraph>
-        <fetcher.Form method="post">
-          <input type="hidden" name="intent" value="update-key" />
-          <s-text-field
-            name="apiKey"
-            label="New API key"
+        {keyError && (
+          <s-banner tone="critical">{keyError}</s-banner>
+        )}
+        <label>
+          <s-text fontWeight="bold">New API key</s-text>
+          <input
+            id="apiKeyInput"
             type="password"
             placeholder="sk_..."
             autoComplete="off"
-            error={fetcher.data?.error || undefined}
+            style={{ width: "100%", padding: "8px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "8px", marginTop: "4px", fontFamily: "inherit" }}
           />
-          <s-button type="submit" {...(fetcher.state !== "idle" ? { loading: true } : {})}>
-            Update key
-          </s-button>
-        </fetcher.Form>
+        </label>
+        <button
+          type="button"
+          disabled={keySubmitState === "sending"}
+          onClick={handleUpdateKey}
+          style={{
+            padding: "8px 20px",
+            fontSize: "14px",
+            fontWeight: 600,
+            backgroundColor: keySubmitState === "sending" ? "#999" : "#333",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: keySubmitState === "sending" ? "wait" : "pointer",
+            marginTop: "8px",
+          }}
+        >
+          {keySubmitState === "sending" ? "Updating..." : "Update key"}
+        </button>
       </s-section>
 
       {/* Preferences Section */}
       <s-section heading="Preferences">
-        <fetcher.Form method="post">
-          <input type="hidden" name="intent" value="update-settings" />
+        {settingsError && (
+          <s-banner tone="critical">{settingsError}</s-banner>
+        )}
 
-          {loaderData.profiles && loaderData.profiles.length > 0 && (
-            <s-select
-              name="profileId"
-              label="Default Zernio profile"
-              value={loaderData.defaultProfileId || ""}
+        {loaderData.profiles && loaderData.profiles.length > 0 && (
+          <label>
+            <s-text fontWeight="bold">Default Zernio profile</s-text>
+            <select
+              id="profileIdSelect"
+              defaultValue={loaderData.defaultProfileId || ""}
+              style={{ width: "100%", padding: "8px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "8px", marginTop: "4px", fontFamily: "inherit" }}
             >
               <option value="">None</option>
               {loaderData.profiles.map(
@@ -178,41 +236,70 @@ export default function Settings() {
                   </option>
                 ),
               )}
-            </s-select>
-          )}
+            </select>
+          </label>
+        )}
 
-          <s-text-field
-            name="timezone"
-            label="Default timezone"
+        <label style={{ display: "block", marginTop: "12px" }}>
+          <s-text fontWeight="bold">Default timezone</s-text>
+          <input
+            id="timezoneInput"
+            type="text"
             defaultValue={loaderData.defaultTimezone}
-            details="IANA timezone, e.g. America/New_York"
+            placeholder="America/New_York"
+            style={{ width: "100%", padding: "8px", fontSize: "14px", border: "1px solid #ccc", borderRadius: "8px", marginTop: "4px", fontFamily: "inherit" }}
           />
+          <s-text tone="subdued">IANA timezone, e.g. America/New_York</s-text>
+        </label>
 
-          <s-heading>Auto-post triggers (coming soon)</s-heading>
-          <s-paragraph>
-            These toggles are ready for Phase 2. When enabled, the app will
-            automatically create social posts when products change.
-          </s-paragraph>
-          <s-checkbox
-            name="autoPostNewProducts"
-            label="Auto-post new products"
+        <s-heading>Auto-post triggers</s-heading>
+        <s-paragraph>
+          When enabled, the app automatically creates social posts when
+          products change in your Shopify store.
+        </s-paragraph>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <input
+            type="checkbox"
+            id="autoPostNewProducts"
             defaultChecked={loaderData.autoPostNewProducts}
           />
-          <s-checkbox
-            name="autoPostBackInStock"
-            label="Auto-post when products are back in stock"
+          <span>Auto-post new products</span>
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <input
+            type="checkbox"
+            id="autoPostBackInStock"
             defaultChecked={loaderData.autoPostBackInStock}
           />
-          <s-checkbox
-            name="autoPostPriceDrop"
-            label="Auto-post on price drops"
+          <span>Auto-post when products are back in stock</span>
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <input
+            type="checkbox"
+            id="autoPostPriceDrop"
             defaultChecked={loaderData.autoPostPriceDrop}
           />
+          <span>Auto-post on price drops</span>
+        </label>
 
-          <s-button type="submit" variant="primary" {...(fetcher.state !== "idle" ? { loading: true } : {})}>
-            Save settings
-          </s-button>
-        </fetcher.Form>
+        <button
+          type="button"
+          disabled={settingsSubmitState === "sending"}
+          onClick={handleUpdateSettings}
+          style={{
+            padding: "10px 32px",
+            fontSize: "14px",
+            fontWeight: 600,
+            backgroundColor: settingsSubmitState === "sending" ? "#999" : "#008060",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: settingsSubmitState === "sending" ? "wait" : "pointer",
+            marginTop: "12px",
+          }}
+        >
+          {settingsSubmitState === "sending" ? "Saving..." : "Save settings"}
+        </button>
       </s-section>
 
       <s-section slot="aside" heading="Help">

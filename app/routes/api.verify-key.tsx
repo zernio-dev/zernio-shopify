@@ -1,4 +1,5 @@
 import type { ActionFunctionArgs } from "react-router";
+import { randomBytes } from "crypto";
 import db from "../db.server";
 import { ZernioClient } from "../lib/zernio-client";
 import { encrypt, apiKeyPreview } from "../lib/encryption.server";
@@ -10,18 +11,19 @@ import { encrypt, apiKeyPreview } from "../lib/encryption.server";
  * it throws a redirect on POST requests in embedded apps before our
  * action code runs. Instead, we get the shop from the existing session
  * in the database (which was created during the initial page load).
+ *
+ * After saving the config, this also registers a Zernio webhook so the
+ * app receives post status updates (published, failed, etc.).
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  console.log("[zernio] verify-key action called");
-
-  // Get shop from the URL referer or find the most recent session
+  // Get shop from the URL params or find the most recent session
   const url = new URL(request.url);
   const shopParam = url.searchParams.get("shop");
 
   let shop: string | null = shopParam;
 
   if (!shop) {
-    // Find shop from the most recent session in the database
+    // Find shop from the most recent offline session in the database
     const recentSession = await db.session.findFirst({
       orderBy: { id: "desc" },
       where: { isOnline: false },
@@ -30,16 +32,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (!shop) {
-    console.log("[zernio] No shop found");
     return Response.json({ error: "Session not found. Reload the page." }, { status: 400 });
   }
 
-  console.log("[zernio] shop:", shop);
-
   const formData = await request.formData();
   const apiKey = formData.get("apiKey") as string;
-
-  console.log("[zernio] apiKey:", apiKey ? apiKey.slice(0, 8) + "..." : "EMPTY");
 
   if (!apiKey?.startsWith("sk_")) {
     return Response.json({ error: "API key must start with sk_" });
@@ -47,12 +44,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     const client = new ZernioClient(apiKey);
-    console.log("[zernio] calling getUser...");
     const user = await client.getUser();
-    console.log("[zernio] plan:", user.planName);
-
     const profiles = await client.getProfiles();
-    console.log("[zernio] profiles:", profiles.length);
+
+    // Generate a random secret for verifying incoming Zernio webhooks
+    const webhookSecret = randomBytes(32).toString("hex");
 
     await db.shopConfig.upsert({
       where: { shop },
@@ -62,19 +58,43 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         zernioApiKeyPreview: apiKeyPreview(apiKey),
         defaultProfileId: profiles[0]?._id || null,
         onboardingComplete: true,
+        zernioWebhookSecret: webhookSecret,
       },
       update: {
         zernioApiKeyEncrypted: encrypt(apiKey),
         zernioApiKeyPreview: apiKeyPreview(apiKey),
         defaultProfileId: profiles[0]?._id || null,
         onboardingComplete: true,
+        zernioWebhookSecret: webhookSecret,
       },
     });
 
-    console.log("[zernio] success! onboarding complete");
+    // Register a webhook with the Zernio API to receive post status updates.
+    // The webhook URL points to our /api/zernio-webhook endpoint.
+    // This is best-effort; if it fails the app still works (just won't get
+    // real-time status updates).
+    const appUrl = process.env.SHOPIFY_APP_URL || "https://zernio-shopify-one.vercel.app";
+    try {
+      const webhook = await client.createWebhook({
+        name: `Shopify - ${shop}`,
+        url: `${appUrl}/api/zernio-webhook`,
+        secret: webhookSecret,
+        events: ["post.published", "post.failed", "post.partial"],
+      });
+
+      // Store the webhook ID so we can manage it later
+      await db.shopConfig.update({
+        where: { shop },
+        data: { zernioWebhookId: webhook._id },
+      });
+    } catch {
+      // Non-fatal: webhook registration failed but onboarding succeeded.
+      // The user can still create posts manually; they just won't get
+      // real-time status updates in the Posts page.
+    }
+
     return Response.json({ success: true, plan: user.planName });
   } catch (err) {
-    console.error("[zernio] error:", err);
     const message = err instanceof Error ? err.message : "Connection failed";
     return Response.json({ error: message });
   }
