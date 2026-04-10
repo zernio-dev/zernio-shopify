@@ -206,7 +206,7 @@ export default function Compose() {
     }
   }, [fetcher.data, shopify]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const content = (document.getElementById("postContent") as HTMLTextAreaElement)?.value || "";
     const publishNow = (document.getElementById("publishNow") as HTMLInputElement)?.checked;
 
@@ -222,19 +222,33 @@ export default function Compose() {
     setSubmitState("sending");
     setSubmitError("");
 
-    // Build a plain object for fetcher.submit (same pattern as verify-key)
-    const data: Record<string, string> = {
-      content,
-      productId: product.id,
-      productTitle: product.title,
-      publishNow: publishNow ? "true" : "false",
-      timezone: loaderData.defaultTimezone || "UTC",
-    };
-    // fetcher.submit doesn't support arrays, so join with commas
-    data.accounts = selectedAccounts.join(",");
-    data.media = selectedMedia.join(",");
+    try {
+      const body = new URLSearchParams();
+      body.append("content", content);
+      body.append("productId", product.id);
+      body.append("productTitle", product.title);
+      body.append("publishNow", publishNow ? "true" : "false");
+      body.append("timezone", loaderData.defaultTimezone || "UTC");
+      body.append("accounts", selectedAccounts.join(","));
+      body.append("media", selectedMedia.join(","));
 
-    fetcher.submit(data, { method: "POST", action: "/api/create-post" });
+      const res = await fetch("/api/create-post", {
+        method: "POST",
+        body,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      });
+      const result = await res.json();
+      if (result.success) {
+        setSubmitState("done");
+        shopify.toast.show("Post created!");
+      } else {
+        setSubmitState("error");
+        setSubmitError(result.error || "Unknown error");
+      }
+    } catch (err) {
+      setSubmitState("error");
+      setSubmitError("Network error. Try again.");
+    }
   };
 
   return (
