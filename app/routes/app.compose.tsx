@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { useFetcher, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
@@ -156,15 +156,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Compose() {
   const loaderData = useLoaderData<typeof loader>();
-  const fetcher = useFetcher();
   const shopify = useAppBridge();
-  const isSubmitting = fetcher.state !== "idle";
 
   const [submitState, setSubmitState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [submitError, setSubmitError] = useState("");
-  const [postId, setPostId] = useState("");
 
-  if (loaderData.error && !loaderData.product) {
+  const { product, accounts } = loaderData;
+
+  const defaultContent = product ? [
+    product.title,
+    product.description ? `\n\n${product.description.slice(0, 200)}${product.description.length > 200 ? "..." : ""}` : "",
+    product.onlineStoreUrl ? `\n\n${product.onlineStoreUrl}` : "",
+  ].join("") : "";
+
+  // All hooks must be above this line. Early returns below.
+
+  if (loaderData.error && !product) {
     return (
       <s-page heading="Share to social">
         <s-section>
@@ -174,16 +181,8 @@ export default function Compose() {
     );
   }
 
-  const { product, accounts } = loaderData;
   if (!product) return null;
 
-  const defaultContent = [
-    product.title,
-    product.description ? `\n\n${product.description.slice(0, 200)}${product.description.length > 200 ? "..." : ""}` : "",
-    product.onlineStoreUrl ? `\n\n${product.onlineStoreUrl}` : "",
-  ].join("");
-
-  // Success state
   if (submitState === "done") {
     return (
       <s-page heading="Post created!">
