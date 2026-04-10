@@ -1,4 +1,13 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import type { HeadersFunction } from "react-router";
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useRouteError,
+} from "react-router";
+import { boundary } from "@shopify/shopify-app-react-router/server";
 
 export default function App() {
   return (
@@ -11,7 +20,6 @@ export default function App() {
           rel="stylesheet"
           href="https://cdn.shopify.com/static/fonts/inter/v4/styles.css"
         />
-        <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" />
         <Meta />
         <Links />
       </head>
@@ -23,3 +31,14 @@ export default function App() {
     </html>
   );
 }
+
+// Shopify needs React Router to catch thrown responses so that their
+// headers (CSP, App Bridge preload) are included in the response.
+// This handles the 410 auth bounce at every route level.
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}
+
+export const headers: HeadersFunction = (headersArgs) => {
+  return boundary.headers(headersArgs);
+};
