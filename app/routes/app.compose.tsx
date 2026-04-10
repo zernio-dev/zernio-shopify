@@ -195,16 +195,6 @@ export default function Compose() {
     );
   }
 
-  useEffect(() => {
-    if (fetcher.data?.success) {
-      setSubmitState("done");
-      shopify.toast.show("Post created!");
-    } else if (fetcher.data?.error) {
-      setSubmitState("error");
-      setSubmitError(fetcher.data.error);
-    }
-  }, [fetcher.data, shopify]);
-
   const handleSubmit = async () => {
     const content = (document.getElementById("postContent") as HTMLTextAreaElement)?.value || "";
     const publishNow = (document.getElementById("publishNow") as HTMLInputElement)?.checked;
