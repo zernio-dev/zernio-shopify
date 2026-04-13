@@ -113,12 +113,13 @@ export default function Products() {
                     <s-button
                       size="slim"
                       variant="primary"
-                      onClick={() => {
-                        const host = new URLSearchParams(window.location.search).get("host");
-                        const decodedHost = host ? atob(host) : "";
-                        const base = decodedHost ? `https://${decodedHost}` : window.top?.location?.origin || "";
-                        window.top!.location.href = `${base}/apps/zernio/compose?productId=${encodeURIComponent(product.id)}`;
-                      }}
+                      // In-iframe navigation via React Router. App Bridge keeps
+                      // the top-level admin URL in sync; we must NOT touch
+                      // window.top.location (that tries to load a non-existent
+                      // /apps/zernio/* route on the admin and 404s).
+                      onClick={() =>
+                        navigate(`/app/compose?productId=${encodeURIComponent(product.id)}`)
+                      }
                     >
                       Share to social
                     </s-button>

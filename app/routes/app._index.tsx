@@ -179,9 +179,16 @@ export default function AppIndex() {
     <s-page heading="Zernio">
       <s-section heading="Quick actions">
         <s-stack direction="inline" gap="base">
-          <s-button variant="primary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top!.location.href = `${b}/apps/zernio/products`; }}>Browse products</s-button>
-          <s-button variant="primary" onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top!.location.href = `${b}/apps/zernio/posts`; }}>View posts</s-button>
-          <s-button onClick={() => { const h = new URLSearchParams(window.location.search).get("host"); const b = h ? `https://${atob(h)}` : ""; window.top!.location.href = `${b}/apps/zernio/settings`; }}>Settings</s-button>
+          {/* Navigate within the iframe — App Bridge syncs the parent admin URL.
+              The previous window.top.location hack tried to push the admin to
+              /apps/zernio/* which doesn't exist as a top-level route. */}
+          <s-button variant="primary" onClick={() => navigate("/app/products")}>
+            Browse products
+          </s-button>
+          <s-button variant="primary" onClick={() => navigate("/app/posts")}>
+            View posts
+          </s-button>
+          <s-button onClick={() => navigate("/app/settings")}>Settings</s-button>
         </s-stack>
       </s-section>
 
