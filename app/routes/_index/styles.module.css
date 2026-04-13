@@ -128,32 +128,42 @@
   font-family: inherit;
   font-weight: 700;
   /* Scales from ~52px on phone to ~150px on desktop */
-  font-size: clamp(3rem, 11vw, 9.5rem);
-  line-height: 0.92;
+  font-size: clamp(2.75rem, 9vw, 8rem);
+  line-height: 0.95;
   letter-spacing: -0.045em;
   margin: 0 0 3rem;
   text-align: left;
 }
 
-.line,
-.lineShopify,
+.lineSell,
 .lineShout {
   display: block;
 }
 
-/* The Shopify line gets the bag mark inline */
-.lineShopify {
+/* "Sell on [bag] Shopify." — inline bag sits right next to the word */
+.lineSell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.3em;
+}
+
+.inlineShopifyWrap {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.15em;
+  align-items: center;
 }
 
 .inlineShopify {
-  width: 0.75em;
-  height: 0.88em;
-  margin-right: 0.08em;
-  transform: translateY(0.04em);
+  width: 0.78em;
+  height: 0.9em;
   flex-shrink: 0;
+  transform: translateY(0.03em);
+  filter: drop-shadow(0 6px 14px rgba(149, 191, 71, 0.35));
+}
+
+.shoutTail {
+  /* The trailing phrase stays charcoal — contrast against the coral Shout */
+  color: var(--charcoal);
 }
 
 /* "Shout" — the coral word with a live shimmer sweep */
