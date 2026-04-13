@@ -3,7 +3,7 @@
   "private": true,
   "description": "Open-source Shopify app for scheduling social media posts via the Zernio API",
   "scripts": {
-    "build": "react-router build",
+    "build": "prisma generate && react-router build",
     "dev": "shopify app dev",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
