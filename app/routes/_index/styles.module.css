@@ -1,6 +1,16 @@
 /* Zernio × Shopify — Simple landing.
  * Cream bg, charcoal text, coral accent, Menlo mono. That's it. */
 
+/* Zero out the default browser margin on body/html so the cream bleeds
+ * to the edges. Scoped to :global because CSS Modules would otherwise
+ * hash these selectors. Safe here — _index is a standalone route with
+ * its own <html> shell and no other page shares the layout. */
+:global(html),
+:global(body) {
+  margin: 0;
+  padding: 0;
+}
+
 .page {
   min-height: 100vh;
   background: #F0EFEB;
