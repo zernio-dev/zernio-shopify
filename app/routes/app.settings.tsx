@@ -38,6 +38,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     // Key may be invalid; let user re-enter
   }
 
+  // Build grouped IANA timezone list for the timezone picker.
+  // Intl.supportedValuesOf returns the canonical list (~400 entries);
+  // grouping by region prefix keeps the dropdown scannable.
+  const allZones = Intl.supportedValuesOf("timeZone");
+  const zonesByRegion: Record<string, string[]> = {};
+  for (const z of allZones) {
+    const region = z.includes("/") ? z.split("/")[0] : "Other";
+    (zonesByRegion[region] ||= []).push(z);
+  }
+  const timezoneGroups = Object.entries(zonesByRegion)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([region, zones]) => ({ region, zones: zones.sort() }));
+
   return {
     configured: true,
     keyPreview: config.zernioApiKeyPreview || "sk_***",
@@ -47,6 +60,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     autoPostBackInStock: config.autoPostBackInStock,
     autoPostPriceDrop: config.autoPostPriceDrop,
     profiles,
+    timezoneGroups,
   };
 };
 
@@ -227,14 +241,25 @@ export default function Settings() {
           </s-select>
         )}
 
-        <s-text-field
+        <s-select
           label="Default timezone"
-          name="timezoneInput"
+          name="timezoneSelect"
           value={timezone}
-          placeholder="America/New_York"
-          helpText="IANA timezone, e.g. America/New_York"
+          details="Used to interpret scheduled post times"
           onChange={(e: any) => setTimezone(e.currentTarget.value)}
-        ></s-text-field>
+        >
+          {loaderData.timezoneGroups?.map(
+            (group: { region: string; zones: string[] }) => (
+              <s-option-group key={group.region} label={group.region}>
+                {group.zones.map((z: string) => (
+                  <s-option key={z} value={z}>
+                    {z}
+                  </s-option>
+                ))}
+              </s-option-group>
+            ),
+          )}
+        </s-select>
 
         <s-heading>Auto-post triggers</s-heading>
         <s-paragraph>
