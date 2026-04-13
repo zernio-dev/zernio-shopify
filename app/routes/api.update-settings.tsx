@@ -71,7 +71,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         defaultProfileId: profileId || null,
         defaultTimezone: timezone || "UTC",
         autoPostNewProducts: formData.get("autoPostNewProducts") === "on",
-        autoPostBackInStock: formData.get("autoPostBackInStock") === "on",
         autoPostPriceDrop: formData.get("autoPostPriceDrop") === "on",
       },
     });

@@ -88,7 +88,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     defaultProfileId: config.defaultProfileId,
     defaultTimezone,
     autoPostNewProducts: config.autoPostNewProducts,
-    autoPostBackInStock: config.autoPostBackInStock,
     autoPostPriceDrop: config.autoPostPriceDrop,
     profiles,
     timezoneGroups,
@@ -116,7 +115,6 @@ export default function Settings() {
   const [profileId, setProfileId] = useState(loaderData.defaultProfileId || "");
   const [timezone, setTimezone] = useState(loaderData.defaultTimezone || "UTC");
   const [autoPostNewProducts, setAutoPostNewProducts] = useState(loaderData.autoPostNewProducts || false);
-  const [autoPostBackInStock, setAutoPostBackInStock] = useState(loaderData.autoPostBackInStock || false);
   const [autoPostPriceDrop, setAutoPostPriceDrop] = useState(loaderData.autoPostPriceDrop || false);
 
   // All hooks must be above this line. Early returns below.
@@ -189,7 +187,6 @@ export default function Settings() {
     body.append("profileId", profileId);
     body.append("timezone", timezone);
     if (autoPostNewProducts) body.append("autoPostNewProducts", "on");
-    if (autoPostBackInStock) body.append("autoPostBackInStock", "on");
     if (autoPostPriceDrop) body.append("autoPostPriceDrop", "on");
 
     const xhr = new XMLHttpRequest();
@@ -302,12 +299,6 @@ export default function Settings() {
           name="autoPostNewProducts"
           checked={autoPostNewProducts || undefined}
           onChange={() => setAutoPostNewProducts((prev) => !prev)}
-        ></s-checkbox>
-        <s-checkbox
-          label="Auto-post when products are back in stock"
-          name="autoPostBackInStock"
-          checked={autoPostBackInStock || undefined}
-          onChange={() => setAutoPostBackInStock((prev) => !prev)}
         ></s-checkbox>
         <s-checkbox
           label="Auto-post on price drops"
