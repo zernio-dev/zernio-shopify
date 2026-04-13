@@ -206,18 +206,22 @@ export default function Settings() {
         )}
 
         {loaderData.profiles && loaderData.profiles.length > 0 && (
+          // s-select is a Polaris web component and only renders <s-option>
+          // children (native <option> elements are ignored, which is why the
+          // picker appeared empty). See:
+          // https://shopify.dev/docs/api/app-home/web-components/forms/select
           <s-select
             label="Default Zernio profile"
             name="profileIdSelect"
             value={profileId}
             onChange={(e: any) => setProfileId(e.currentTarget.value)}
           >
-            <option value="">None</option>
+            <s-option value="">None</s-option>
             {loaderData.profiles.map(
               (p: { _id: string; name: string }) => (
-                <option key={p._id} value={p._id}>
+                <s-option key={p._id} value={p._id}>
                   {p.name}
-                </option>
+                </s-option>
               ),
             )}
           </s-select>
