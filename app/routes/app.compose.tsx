@@ -562,7 +562,13 @@ export default function Compose() {
             ></s-text-field>
             <s-text color="subdued">
               Times use {data.defaultTimezone || "UTC"}.
-              {scheduledFor && ` Will publish ${new Date(scheduledFor).toLocaleString()}.`}
+              {scheduledFor &&
+                ` Will publish ${new Date(scheduledFor).toLocaleString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}.`}
             </s-text>
           </s-stack>
         )}

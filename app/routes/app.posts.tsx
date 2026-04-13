@@ -328,14 +328,19 @@ export default function Posts() {
   );
 }
 
+/**
+ * Deterministic timestamp formatter — fixed locale + UTC timezone so SSR
+ * and client render the same string (no React hydration mismatch).
+ */
 function formatDateTime(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "UTC",
   });
 }
 

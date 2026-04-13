@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { useLoaderData, useNavigate } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
@@ -121,9 +121,14 @@ export default function BulkSchedule() {
   const [templateId, setTemplateId] = useState<string>("");
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [cadence, setCadence] = useState<string>("60");
-  const [startAt, setStartAt] = useState<string>(
-    () => isoLocalNow(),
-  );
+  // Initialize empty so SSR and first client render match — set to "now"
+  // after hydration via useEffect (Date.now() differs server vs client).
+  const [startAt, setStartAt] = useState<string>("");
+  useEffect(() => {
+    if (!startAt) setStartAt(isoLocalNow());
+    // run once on mount; intentionally no startAt dep
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [submitState, setSubmitState] = useState<
     "idle" | "sending" | "done" | "error"
   >("idle");
@@ -133,14 +138,16 @@ export default function BulkSchedule() {
     total: 0,
   });
 
-  // Compute the preview timeline so the merchant sees what will happen
+  // Compute the preview timeline so the merchant sees what will happen.
+  // If startAt isn't set yet (initial render before hydration), fall back
+  // to "Immediately" so we don't generate non-deterministic dates server-side.
   const timeline = useMemo(() => {
     if (!data.products.length) return [];
     const intervalMin = cadence === "now" ? 0 : parseInt(cadence, 10);
-    const start = startAt ? new Date(startAt) : new Date();
+    const start = startAt ? new Date(startAt) : null;
     return data.products.map((p, i) => ({
       product: p,
-      when: cadence === "now"
+      when: cadence === "now" || !start
         ? null
         : new Date(start.getTime() + i * intervalMin * 60_000),
     }));
@@ -371,7 +378,15 @@ export default function BulkSchedule() {
                 )}
                 <s-text fontWeight="bold">{item.product.title}</s-text>
                 <s-badge>
-                  {item.when ? item.when.toLocaleString() : "Immediately"}
+                  {item.when
+                    ? item.when.toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        timeZone: "UTC",
+                      })
+                    : "Immediately"}
                 </s-badge>
               </s-stack>
             </s-box>

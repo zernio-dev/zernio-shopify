@@ -96,6 +96,15 @@ export default function AppIndex() {
   const shopify = useAppBridge();
 
   const [apiKeyValue, setApiKeyValue] = useState("");
+  // `now` stays null on the server and during the first client paint — that
+  // way SSR and the initial client render produce the same HTML. We only
+  // swap to relative timestamps after hydration.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const tick = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(tick);
+  }, []);
   const isLoading =
     ["loading", "submitting"].includes(fetcher.state) &&
     fetcher.formMethod === "POST";
@@ -263,10 +272,10 @@ export default function AppIndex() {
                     </s-stack>
                     <s-text color="subdued">
                       {post.publishedAt
-                        ? `Published ${formatRelative(post.publishedAt)}`
+                        ? `Published ${now ? formatRelative(post.publishedAt, now) : formatAbsolute(post.publishedAt)}`
                         : post.scheduledFor
                           ? `Scheduled for ${formatAbsolute(post.scheduledFor)}`
-                          : `Created ${formatRelative(post.createdAt)}`}
+                          : `Created ${now ? formatRelative(post.createdAt, now) : formatAbsolute(post.createdAt)}`}
                     </s-text>
                   </s-stack>
                 </s-stack>
@@ -315,9 +324,32 @@ function StatCard({
   );
 }
 
-function formatRelative(d: string | Date): string {
+/**
+ * Deterministic absolute timestamp — always renders identical text on the
+ * server and client, which avoids React hydration mismatch (errors 418/425).
+ *
+ * We render this at SSR time. After the page hydrates, individual components
+ * may swap to a relative form ("3h ago") via useEffect.
+ */
+function formatAbsolute(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
-  const diffMs = Date.now() - date.getTime();
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
+}
+
+/**
+ * Returns "Xm ago" / "Xh ago" / "Xd ago" — but ONLY after the component
+ * has mounted on the client (we pass `now` as a prop so the component
+ * itself can null-check before calling). Server-render shows absolute.
+ */
+function formatRelative(d: string | Date, now: number): string {
+  const date = typeof d === "string" ? new Date(d) : d;
+  const diffMs = now - date.getTime();
   const mins = Math.floor(diffMs / 60_000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -325,17 +357,7 @@ function formatRelative(d: string | Date): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
-}
-
-function formatAbsolute(d: string | Date): string {
-  const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return formatAbsolute(date);
 }
 
 export const headers: HeadersFunction = (headersArgs) => {
