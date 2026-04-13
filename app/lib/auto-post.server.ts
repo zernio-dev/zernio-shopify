@@ -131,6 +131,21 @@ function computeScheduledFor(
 }
 
 /**
+ * Platforms that REQUIRE media on every post. If we don't have any
+ * `mediaItems` we can't send to them — Zernio rejects the whole batch
+ * (not just that platform) when even one entry fails pre-validation.
+ *
+ * Source: per-platform validators in zernio's libs/platforms/*.ts
+ */
+const MEDIA_REQUIRED_PLATFORMS = new Set([
+  "instagram",
+  "pinterest",
+  "tiktok",
+  "youtube",
+  "snapchat",
+]);
+
+/**
  * Convert a wall-clock string ("YYYY-MM-DDTHH:mm:ss") in the given IANA
  * timezone to a UTC Date. Uses Intl to find the offset for that instant.
  */
@@ -213,25 +228,32 @@ export async function createAutoPost(
   }
   if (accountIds.length === 0) return;
 
-  // Build the platforms array (need fresh accounts to map id → platform)
-  const accounts = await client.getAccounts(
-    config.defaultProfileId || undefined,
-  );
-  const platforms = accountIds
-    .map((id) => {
-      const acc = accounts.find((a) => a._id === id);
-      if (!acc) return null;
-      return { platform: acc.platform, accountId: acc._id };
-    })
-    .filter((p): p is { platform: string; accountId: string } => p !== null);
-
-  if (platforms.length === 0) return;
-
   // Featured image only — the inventory/products webhook payloads only
   // give us the featured image. Multi-image is a manual-compose feature.
   const mediaItems = product.imageUrl
     ? [{ type: "image" as const, url: product.imageUrl }]
     : undefined;
+
+  // Build the platforms array (need fresh accounts to map id → platform).
+  // When the post has no media we MUST skip platforms that require it —
+  // otherwise Zernio rejects the entire batch (not just the bad entry).
+  const accounts = await client.getAccounts(
+    config.defaultProfileId || undefined,
+  );
+  const hasMedia = !!mediaItems && mediaItems.length > 0;
+  const platforms = accountIds
+    .map((id) => {
+      const acc = accounts.find((a) => a._id === id);
+      if (!acc) return null;
+      // Skip media-only platforms when there's no media to attach
+      if (!hasMedia && MEDIA_REQUIRED_PLATFORMS.has(acc.platform.toLowerCase())) {
+        return null;
+      }
+      return { platform: acc.platform, accountId: acc._id };
+    })
+    .filter((p): p is { platform: string; accountId: string } => p !== null);
+
+  if (platforms.length === 0) return;
 
   // Scheduling
   const scheduledFor = computeScheduledFor(
