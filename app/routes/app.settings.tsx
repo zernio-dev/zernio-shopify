@@ -17,7 +17,7 @@ import { ZernioClient } from "../lib/zernio-client";
 // ---------------------------------------------------------------------------
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
 
   const config = await db.shopConfig.findUnique({
     where: { shop: session.shop },
@@ -38,10 +38,41 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     // Key may be invalid; let user re-enter
   }
 
+  // Backfill defaultTimezone from the actual shop timezone configured in
+  // Shopify admin. Legacy rows have the Prisma fallback "UTC" which rarely
+  // matches the merchant's real zone. We pull shop.ianaTimezone via the
+  // GraphQL Admin API and use it when the stored value looks untouched.
+  let defaultTimezone = config.defaultTimezone;
+  if (!defaultTimezone || defaultTimezone === "UTC") {
+    try {
+      const shopResp = await admin.graphql(`#graphql
+        query ShopTimezone { shop { ianaTimezone } }
+      `);
+      const shopData = (await shopResp.json())?.data?.shop;
+      const iana = shopData?.ianaTimezone;
+      if (iana && iana !== defaultTimezone) {
+        defaultTimezone = iana;
+        await db.shopConfig.update({
+          where: { shop: session.shop },
+          data: { defaultTimezone: iana },
+        });
+      }
+    } catch {
+      // Non-fatal: fall through with whatever we had
+    }
+  }
+
   // Build grouped IANA timezone list for the timezone picker.
   // Intl.supportedValuesOf returns the canonical list (~400 entries);
-  // grouping by region prefix keeps the dropdown scannable.
-  const allZones = Intl.supportedValuesOf("timeZone");
+  // grouping by region prefix keeps the dropdown scannable. We also make
+  // sure UTC is always present as a fallback so legacy "UTC" rows match.
+  const allZones = new Set<string>(Intl.supportedValuesOf("timeZone"));
+  allZones.add("UTC");
+  // Include the merchant's current zone in case it's somehow missing from
+  // the platform's ICU tables (prevents the picker ever showing the wrong
+  // default again).
+  if (defaultTimezone) allZones.add(defaultTimezone);
+
   const zonesByRegion: Record<string, string[]> = {};
   for (const z of allZones) {
     const region = z.includes("/") ? z.split("/")[0] : "Other";
@@ -55,7 +86,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     configured: true,
     keyPreview: config.zernioApiKeyPreview || "sk_***",
     defaultProfileId: config.defaultProfileId,
-    defaultTimezone: config.defaultTimezone,
+    defaultTimezone,
     autoPostNewProducts: config.autoPostNewProducts,
     autoPostBackInStock: config.autoPostBackInStock,
     autoPostPriceDrop: config.autoPostPriceDrop,
