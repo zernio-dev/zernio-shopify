@@ -13,9 +13,9 @@ Everything required to submit this app for Shopify App Store review. Code-level 
 - [x] Scopes declared in `shopify.app.toml`: `read_products`, `read_inventory`
 - [x] Webhook subscriptions declared + HMAC-validated by `authenticate.webhook()`
 - [x] Free pricing — no billing surface
-- [x] Production deployment at `shopify.zernio.com` (Vercel)
+- [x] Production deployment at `store.zernio.com` (Vercel)
 - [x] Custom domain + proper CSP via `@shopify/shopify-app-react-router`
-- [x] Public-facing landing page with FAQ at `shopify.zernio.com/`
+- [x] Public-facing landing page with FAQ at `store.zernio.com/`
 - [x] Repo public, MIT licensed
 - [x] README + CONTRIBUTING in the repo
 - [x] Listing copy drafted (`docs/APP-STORE-LISTING.md`)
@@ -25,7 +25,7 @@ Everything required to submit this app for Shopify App Store review. Code-level 
 
 ### Hosting / ops
 
-- [ ] **Host the privacy policy at a public URL** — suggest `zernio.com/shopify/privacy` or `shopify.zernio.com/privacy`. Just serve the contents of `docs/PRIVACY-POLICY.md` as HTML. Reviewer will check the URL opens.
+- [ ] **Host the privacy policy at a public URL** — suggest `zernio.com/shopify/privacy` or `store.zernio.com/privacy`. Just serve the contents of `docs/PRIVACY-POLICY.md` as HTML. Reviewer will check the URL opens.
 - [ ] **Confirm support email is monitored** — `support@zernio.com` is referenced throughout. If that inbox isn't already staffed, create a Crisp / helpdesk rule to route it or change to a dedicated alias.
 - [x] **Reviewer API key issued** — `sk_18deb85a0b1d331bcfed7f6c8934177dd6f73d5ea5d1dadb506425f9604071d9` tied to demo@zernio.com (Professional plan, 5 active accounts connected). Paste into the submission reviewer notes. Revoke after review is complete via Zernio dashboard.
 
@@ -41,7 +41,7 @@ Everything required to submit this app for Shopify App Store review. Code-level 
   5. Settings with auto-publish triggers + UTM toggle live example
 - [ ] **Demo video** — ≤5 minutes, English voiceover.
   Suggested flow (shoot in order):
-  1. (0:00-0:20) Landing page at `shopify.zernio.com` — explain the value
+  1. (0:00-0:20) Landing page at `store.zernio.com` — explain the value
   2. (0:20-0:45) Install on a dev store → onboarding screen → paste Zernio API key → dashboard
   3. (0:45-1:30) Browse products → click Share → show composer with per-platform tabs → schedule
   4. (1:30-2:30) Templates → create one with `{{title}}` / `{{price}}` variables → show auto-publish toggle in Settings
@@ -61,7 +61,7 @@ Everything required to submit this app for Shopify App Store review. Code-level 
 - [ ] Pricing: Free
 - [ ] Privacy policy URL
 - [ ] Support email
-- [ ] Demo URL: `https://shopify.zernio.com`
+- [ ] Demo URL: `https://store.zernio.com`
 - [ ] Demo video URL (Loom, YouTube, or Vimeo unlisted)
 - [ ] Screenshots uploaded
 - [ ] Test credentials in reviewer notes

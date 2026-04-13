@@ -1,13 +1,13 @@
 # Learn more: https://shopify.dev/docs/apps/build/cli-for-apps/app-configuration
 name = "Zernio"
 client_id = "ee20ee832fea8bfbc7fe61e1c960b935"
-application_url = "https://shopify.zernio.com"
+application_url = "https://store.zernio.com"
 embedded = true
 
 [auth]
 redirect_urls = [
-  "https://shopify.zernio.com/auth/callback",
-  "https://shopify.zernio.com/auth/shopify/callback",
+  "https://store.zernio.com/auth/callback",
+  "https://store.zernio.com/auth/shopify/callback",
 ]
 
 [access_scopes]

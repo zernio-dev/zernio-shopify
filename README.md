@@ -6,7 +6,7 @@ Open-source Shopify app that turns your products into scheduled social media pos
 Shopify Admin  ──▶  This App  ──▶  Zernio API  ──▶  13 social platforms
 ```
 
-**Live at** [shopify.zernio.com](https://shopify.zernio.com) · Free · MIT licensed · No install fee, no per-post charge.
+**Live at** [store.zernio.com](https://store.zernio.com) · Free · MIT licensed · No install fee, no per-post charge.
 
 ## What it does
 
@@ -74,7 +74,7 @@ Press **P** to open the app URL, click **Install** on your development store, pa
 | `SHOPIFY_API_KEY` | Shopify app API key (Partner Dashboard) | Yes |
 | `SHOPIFY_API_SECRET` | Shopify app secret | Yes |
 | `SCOPES` | Shopify access scopes — `read_products,read_inventory` | Yes |
-| `SHOPIFY_APP_URL` | Deployed app URL (e.g. `https://shopify.zernio.com`) | Yes |
+| `SHOPIFY_APP_URL` | Deployed app URL (e.g. `https://store.zernio.com`) | Yes |
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `ENCRYPTION_KEY` | 64-char hex for API key encryption | Yes |
 | `SHOP_CUSTOM_DOMAIN` | Custom domain for Shopify Plus stores | No |
@@ -115,7 +115,7 @@ app/
     app.settings.tsx            # connection, defaults, auto-publish, UTM
     api.*.tsx                   # XHR endpoints (create-post, upsert/delete-template, bulk-create-posts, verify-key, update-settings, zernio-webhook)
     webhooks.*.tsx              # Shopify webhooks (products, inventory, compliance, app-uninstalled, scopes-update)
-    _index/                     # public landing at shopify.zernio.com
+    _index/                     # public landing at store.zernio.com
   shopify.server.ts             # Shopify app config
   db.server.ts                  # Prisma singleton
 prisma/
