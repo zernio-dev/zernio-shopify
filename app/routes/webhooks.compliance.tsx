@@ -15,7 +15,7 @@ import db from "../db.server";
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { topic, shop } = await authenticate.webhook(request);
 
-  console.log(`Received compliance webhook ${topic} for ${shop}`);
+  console.log(`[compliance] topic=${JSON.stringify(topic)} shop=${JSON.stringify(shop)}`);
 
   switch (topic) {
     case "CUSTOMERS_DATA_REQUEST":
@@ -31,16 +31,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       // PostTemplate and InventorySnapshot via the ShopConfig relation,
       // but we also delete them explicitly for visibility in audit logs.
       const config = await db.shopConfig.findUnique({ where: { shop } });
+      console.log(`[compliance/SHOP_REDACT] config found: ${!!config}`);
       if (config) {
-        await db.postLog.deleteMany({ where: { shopConfigId: config.id } });
-        await db.postTemplate.deleteMany({ where: { shopConfigId: config.id } });
-        await db.inventorySnapshot.deleteMany({
+        const r1 = await db.postLog.deleteMany({ where: { shopConfigId: config.id } });
+        const r2 = await db.postTemplate.deleteMany({ where: { shopConfigId: config.id } });
+        const r3 = await db.inventorySnapshot.deleteMany({
           where: { shopConfigId: config.id },
         });
         await db.shopConfig.delete({ where: { shop } });
+        console.log(
+          `[compliance/SHOP_REDACT] deleted ${r1.count} logs, ${r2.count} templates, ${r3.count} snapshots, 1 config`,
+        );
       }
-      // Also clean up any remaining sessions
-      await db.session.deleteMany({ where: { shop } });
+      const r4 = await db.session.deleteMany({ where: { shop } });
+      console.log(`[compliance/SHOP_REDACT] deleted ${r4.count} sessions`);
       break;
     }
 
