@@ -1,0 +1,174 @@
+/* Zernio for Shopify — Privacy Policy
+ * Same cream + charcoal + Menlo aesthetic as the landing. */
+
+:global(html),
+:global(body) {
+  margin: 0;
+  padding: 0;
+}
+
+.page {
+  min-height: 100vh;
+  background: #F0EFEB;
+  color: #2D2D2D;
+  font-family: Menlo, Consolas, Monaco, "Liberation Mono", "Courier New", monospace;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.doc {
+  max-width: 760px;
+  margin: 0 auto;
+  line-height: 1.65;
+  font-size: 0.875rem;
+}
+
+/* ---- Header ---- */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo {
+  height: 22px;
+  width: auto;
+}
+
+.meta {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6B6B6B;
+}
+
+/* ---- Typography ---- */
+
+.h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 1.5rem;
+  color: #2D2D2D;
+}
+
+.h2 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 2.5rem 0 0.75rem;
+  color: #2D2D2D;
+}
+
+.doc p {
+  margin: 0 0 1rem;
+  color: #2D2D2D;
+}
+
+.doc a {
+  color: #EB3514;
+  text-decoration: underline;
+  text-decoration-color: rgba(235, 53, 20, 0.3);
+  text-underline-offset: 2px;
+}
+
+.doc a:hover {
+  text-decoration-color: #EB3514;
+}
+
+.doc strong {
+  color: #2D2D2D;
+  font-weight: 700;
+}
+
+.doc code {
+  font-family: inherit;
+  font-size: 0.8125rem;
+  background: rgba(235, 53, 20, 0.08);
+  color: #EB3514;
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  border: 1px solid rgba(235, 53, 20, 0.15);
+}
+
+.doc ul {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.doc li {
+  margin-bottom: 0.5rem;
+}
+
+/* ---- Table ---- */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0 1.25rem;
+  font-size: 0.8125rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #D9D8D3;
+  vertical-align: top;
+}
+
+.table th {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6B6B6B;
+  background: rgba(45, 45, 45, 0.02);
+}
+
+.table td code {
+  white-space: nowrap;
+}
+
+/* ---- Footer ---- */
+
+.footer {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #D9D8D3;
+  font-size: 0.8125rem;
+}
+
+.footer a {
+  color: #6B6B6B;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #EB3514;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1.5rem 1rem 3rem;
+  }
+  .h1 {
+    font-size: 1.5rem;
+  }
+  .table {
+    font-size: 0.75rem;
+  }
+  .table th,
+  .table td {
+    padding: 0.4rem 0.5rem;
+  }
+}

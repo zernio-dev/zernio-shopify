@@ -92,7 +92,8 @@ export default function Index() {
         <p className={styles.meta}>
           Free ·{" "}
           <a href="https://github.com/zernio-dev/zernio-shopify">Open source</a> ·{" "}
-          <a href="https://docs.zernio.com">Docs</a>
+          <a href="https://docs.zernio.com">Docs</a> ·{" "}
+          <a href="/privacy-policy">Privacy</a>
         </p>
 
         {showForm && (
