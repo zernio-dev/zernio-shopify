@@ -16,13 +16,19 @@
   background: #F0EFEB;
   color: #2D2D2D;
   font-family: Menlo, Consolas, Monaco, "Liberation Mono", "Courier New", monospace;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 2rem 1.5rem;
   gap: 1.5rem;
+  min-height: calc(100vh - 6rem);
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 .logo {
@@ -117,3 +123,87 @@
 }
 
 .loginBtn:hover { border-color: #2D2D2D; }
+
+/* ── FAQ ───────────────────────────────────────────────────────────
+ * Mirrors the pattern used on zernio.com/: a small coral-tinted badge
+ * header, then a <dl> where each row is a bold question and an answer
+ * prefixed with "└" that lines up in a 2-column grid. All typography
+ * inherits the Menlo mono from .page. */
+
+.faq {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 4rem 0 2rem;
+}
+
+.faqHeading {
+  margin: 0 0 2rem;
+}
+
+/* Badge pulled from libs/design-system/styles.ts — recreated in CSS
+ * because this route isn't using Tailwind. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+  background: rgba(235, 53, 20, 0.08);
+  border: 1px solid rgba(235, 53, 20, 0.15);
+  color: #EB3514;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.faqItem {
+  /* wrapper so each dt/dd pair stays together */
+}
+
+.faqQ {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2D2D2D;
+  margin: 0;
+}
+
+.faqA {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.5rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: #6B6B6B;
+  line-height: 1.6;
+}
+
+.faqArrow {
+  color: #6B6B6B;
+  user-select: none;
+}
+
+.faqFooter {
+  margin: 2rem 0 0;
+  font-size: 0.8125rem;
+  color: #6B6B6B;
+}
+
+.faqFooter a {
+  color: #6B6B6B;
+  text-decoration: underline;
+  text-decoration-color: #D9D8D3;
+  text-underline-offset: 3px;
+}
+
+.faqFooter a:hover {
+  color: #EB3514;
+}
