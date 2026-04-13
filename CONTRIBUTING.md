@@ -1,6 +1,6 @@
 # Contributing to Zernio Shopify
 
-Thanks for your interest in contributing! This is an open-source Shopify app that connects Shopify product catalogs to the [Zernio](https://zernio.com) social media scheduling API.
+Thanks for your interest in contributing! This is an open-source Shopify app that connects Shopify product catalogs to [Zernio's social APIs](https://zernio.com).
 
 ## Development Setup
 

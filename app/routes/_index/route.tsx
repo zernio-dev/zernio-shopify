@@ -20,7 +20,7 @@ const FAQS = [
   },
   {
     q: "Do I need a Zernio account?",
-    a: "Yes. The app is a bridge between Shopify and Zernio's social posting API. Sign up free at zernio.com, connect your social accounts there, paste your API key into this app, and you're connected. Revenue comes from your Zernio subscription, not from this app.",
+    a: "Yes. The app is a bridge between Shopify and Zernio's social APIs — the platform that actually publishes to the 13 networks (plus inbox, analytics, and webhooks if you need them). Sign up free at zernio.com, connect your social accounts there, paste your API key into this app, and you're connected. Revenue comes from your Zernio subscription, not from this app.",
   },
   {
     q: "Is the Shopify app really free?",
