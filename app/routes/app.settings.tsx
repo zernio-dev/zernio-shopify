@@ -79,6 +79,34 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([region, zones]) => ({ region, zones: zones.sort() }));
 
+  // For every auto-publish trigger that's currently ON, does the merchant
+  // actually have an active template with at least one accountId? If not,
+  // the trigger will silently skip every fire — the banner in the UI
+  // tells them what's missing so they don't think the app is broken.
+  const activeTemplates = await db.postTemplate.findMany({
+    where: { shopConfigId: config.id, isActive: true },
+    select: { triggerType: true, accountIds: true },
+  });
+  const hasUsableTemplate = (trigger: string) =>
+    activeTemplates.some(
+      (t) => t.triggerType === trigger && t.accountIds && t.accountIds.length > 0,
+    );
+
+  const triggerStatus = {
+    newProducts: {
+      enabled: config.autoPostNewProducts,
+      hasTemplate: hasUsableTemplate("new_product"),
+    },
+    priceDrop: {
+      enabled: config.autoPostPriceDrop,
+      hasTemplate: hasUsableTemplate("price_drop"),
+    },
+    backInStock: {
+      enabled: config.autoPostBackInStock,
+      hasTemplate: hasUsableTemplate("back_in_stock"),
+    },
+  };
+
   return {
     configured: true,
     shop: session.shop,
@@ -91,6 +119,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     utmEnabled: config.utmEnabled,
     profiles,
     timezoneGroups,
+    triggerStatus,
   };
 };
 
@@ -291,27 +320,56 @@ export default function Settings() {
       <s-section heading="Auto-publish triggers">
         <s-paragraph>
           Publish automatically when a product event happens in Shopify.
-          Posts go live immediately by default — set a delay or fixed
-          time on a Template if you need scheduling.
+          <s-text fontWeight="bold"> Each trigger needs an active Template
+          that specifies which accounts to post to.</s-text> Without a
+          matching template, the trigger fires but nothing is posted —
+          this is intentional to prevent accidentally broadcasting to
+          every connected account.
         </s-paragraph>
+
+        {/* Warn per-trigger when enabled but missing a usable template */}
+        {(() => {
+          const missing: string[] = [];
+          if (data.triggerStatus?.newProducts.enabled && !data.triggerStatus?.newProducts.hasTemplate) missing.push("new products");
+          if (data.triggerStatus?.priceDrop.enabled && !data.triggerStatus?.priceDrop.hasTemplate) missing.push("price drops");
+          if (data.triggerStatus?.backInStock.enabled && !data.triggerStatus?.backInStock.hasTemplate) missing.push("back in stock");
+          if (missing.length === 0) return null;
+          return (
+            <s-banner tone="warning">
+              <s-stack direction="block" gap="small-100">
+                <s-text fontWeight="bold">
+                  No active template for: {missing.join(", ")}
+                </s-text>
+                <s-text>
+                  These triggers are enabled but will skip every fire
+                  until you create a template with at least one target
+                  account.
+                </s-text>
+                <s-button onClick={() => navigate("/app/templates/new")}>
+                  Create a template
+                </s-button>
+              </s-stack>
+            </s-banner>
+          );
+        })()}
 
         <s-checkbox
           label="When a product is created"
-          details="Fires on products/create. Skips drafts."
+          details="Fires on products/create. Skips drafts. Requires a template with triggerType=new_product."
           checked={autoPostNewProducts || undefined}
           onChange={() => setAutoPostNewProducts((prev) => !prev)}
         ></s-checkbox>
 
         <s-checkbox
           label="When a product goes on sale"
-          details="Fires when compare-at price is set above current price. Dedupes per product for 1 hour."
+          details="Fires when compare-at price is set above current price. Dedupes per product for 1 hour. Requires a template with triggerType=price_drop."
           checked={autoPostPriceDrop || undefined}
           onChange={() => setAutoPostPriceDrop((prev) => !prev)}
         ></s-checkbox>
 
         <s-checkbox
           label="When a product is back in stock"
-          details="Fires when any variant goes from 0 to any positive count. Dedupes per product for 24 hours."
+          details="Fires when any variant goes from 0 to any positive count. Dedupes per product for 24 hours. Requires a template with triggerType=back_in_stock."
           checked={autoPostBackInStock || undefined}
           onChange={() => setAutoPostBackInStock((prev) => !prev)}
         ></s-checkbox>

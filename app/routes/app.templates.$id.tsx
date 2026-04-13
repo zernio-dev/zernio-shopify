@@ -310,8 +310,14 @@ export default function TemplateEditor() {
       {data.accounts.length > 0 && (
         <s-section heading="Where to post">
           <s-paragraph>
-            Pick which accounts this template publishes to. Leave blank to
-            post to every connected account in your default profile.
+            Pick at least one account this template publishes to.
+            {triggerType !== "manual" && (
+              <s-text fontWeight="bold">
+                {" "}Required for auto-publish — if left blank, this trigger
+                will skip every fire (safer than accidentally broadcasting
+                to every connected account).
+              </s-text>
+            )}
           </s-paragraph>
           <s-stack direction="block" gap="small-200">
             {Object.entries(grouped).map(([platform, accs]) => (

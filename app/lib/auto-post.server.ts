@@ -179,10 +179,18 @@ export async function createAutoPost(
 ): Promise<void> {
   if (!product.isActive) return;
 
-  const apiKey = decrypt(config.zernioApiKeyEncrypted);
-  const client = new ZernioClient(apiKey);
-
-  // Pick the active PostTemplate matching this trigger, if any
+  // Hard requirement: auto-publish ONLY runs when the merchant has an
+  // active PostTemplate for this trigger that specifies at least one
+  // account. Without this check, a single webhook fires a post to every
+  // connected account on the profile — which is almost never what a
+  // merchant wants and caused a real incident during internal testing.
+  //
+  // The merchant opts in by:
+  //   1. Toggling the auto-publish trigger on in Settings
+  //   2. Creating an active Template for that trigger with explicit accountIds
+  //
+  // No template, no post. The Settings page surfaces a banner telling
+  // the merchant exactly what's missing so the failure mode is visible.
   const template = await db.postTemplate.findFirst({
     where: {
       shopConfigId: config.id,
@@ -190,26 +198,33 @@ export async function createAutoPost(
       isActive: true,
     },
   });
+  if (!template) {
+    console.warn(
+      `[auto-post] ${config.shop}: trigger=${triggerType} fired but no active template — skipping`,
+    );
+    return;
+  }
+  if (!template.accountIds || template.accountIds.length === 0) {
+    console.warn(
+      `[auto-post] ${config.shop}: trigger=${triggerType} template="${template.name}" has no accountIds — skipping (would otherwise broadcast to every account)`,
+    );
+    return;
+  }
+
+  const apiKey = decrypt(config.zernioApiKeyEncrypted);
+  const client = new ZernioClient(apiKey);
 
   const productUrl = buildProductUrl(config.shop, product.handle);
   const description = product.description ? stripHtml(product.description) : "";
   const descSnippet = description.slice(0, 200);
 
-  // Build content
-  let content: string;
-  if (template) {
-    content = renderTemplate(template.contentTemplate, {
-      title: product.title,
-      price: product.price,
-      url: productUrl,
-      description: descSnippet,
-    });
-  } else {
-    const tail = descSnippet
-      ? `\n\n${descSnippet}${description.length > 200 ? "..." : ""}`
-      : "";
-    content = `${product.title}${tail}\n\n${productUrl}`;
-  }
+  // Render the template (guaranteed non-null at this point)
+  let content = renderTemplate(template.contentTemplate, {
+    title: product.title,
+    price: product.price,
+    url: productUrl,
+    description: descSnippet,
+  });
 
   if (config.utmEnabled) {
     content = injectUtm(content, {
@@ -218,15 +233,7 @@ export async function createAutoPost(
     });
   }
 
-  // Resolve target accounts
-  let accountIds = template?.accountIds ?? [];
-  if (accountIds.length === 0) {
-    const accounts = await client.getAccounts(
-      config.defaultProfileId || undefined,
-    );
-    accountIds = accounts.filter((a) => a.isActive).map((a) => a._id);
-  }
-  if (accountIds.length === 0) return;
+  const accountIds = template.accountIds;
 
   // Featured image only — the inventory/products webhook payloads only
   // give us the featured image. Multi-image is a manual-compose feature.
