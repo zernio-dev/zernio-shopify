@@ -56,3 +56,7 @@ vite.config.ts.timestamp-*
 auth.json
 test-*.mjs
 auth.json
+
+# Local verification artifacts
+verify-all.mjs
+shots/
