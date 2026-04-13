@@ -57,14 +57,22 @@ export interface ZernioPost {
   updatedAt: string;
 }
 
+export interface MediaItem {
+  type: "image" | "video" | "gif";
+  url: string;
+}
+
 export interface CreatePostParams {
   content: string;
-  mediaItems?: Array<{ type: "image" | "video" | "gif"; url: string }>;
+  mediaItems?: MediaItem[];
   platforms: Array<{
     platform: string;
     accountId: string;
     scheduledFor?: string;
+    /** Per-platform caption override. Falls back to `content` when empty. */
     customContent?: string;
+    /** Per-platform media override. Falls back to `mediaItems` when empty. */
+    customMedia?: MediaItem[];
   }>;
   scheduledFor?: string;
   publishNow?: boolean;

@@ -11,7 +11,9 @@ redirect_urls = [
 ]
 
 [access_scopes]
-scopes = "read_products"
+# read_products: browse products + fetch product detail for compose/auto-post.
+# read_inventory: detect 0 → >0 transitions for the back-in-stock trigger.
+scopes = "read_products,read_inventory"
 
 [webhooks]
 api_version = "2025-10"
@@ -28,6 +30,13 @@ api_version = "2025-10"
   [[webhooks.subscriptions]]
   topics = ["products/create", "products/update", "products/delete"]
   uri = "/webhooks/products"
+
+  # Inventory levels for the back-in-stock trigger. Fires whenever a
+  # variant's available count changes at any location. Handler compares
+  # to InventorySnapshot and auto-publishes on 0 → >0 transitions.
+  [[webhooks.subscriptions]]
+  topics = ["inventory_levels/update"]
+  uri = "/webhooks/inventory"
 
   # Mandatory GDPR compliance webhooks
   [[webhooks.subscriptions]]

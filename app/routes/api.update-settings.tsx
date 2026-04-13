@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
-import { decrypt, encrypt, apiKeyPreview } from "../lib/encryption.server";
+import { encrypt, apiKeyPreview } from "../lib/encryption.server";
 import { ZernioClient, ZernioApiError } from "../lib/zernio-client";
 
 /**
@@ -71,7 +71,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         defaultProfileId: profileId || null,
         defaultTimezone: timezone || "UTC",
         autoPostNewProducts: formData.get("autoPostNewProducts") === "on",
+        autoPostBackInStock: formData.get("autoPostBackInStock") === "on",
         autoPostPriceDrop: formData.get("autoPostPriceDrop") === "on",
+        utmEnabled: formData.get("utmEnabled") === "on",
       },
     });
 

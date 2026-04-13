@@ -42,7 +42,7 @@ model ShopConfig {
   defaultTimezone       String   @default("UTC")
   onboardingComplete    Boolean  @default(false)
 
-  // Auto-post toggles (Phase 2 - UI-ready, not wired to webhooks yet)
+  // Auto-publish triggers (immediate publish unless template defines a delay)
   autoPostNewProducts Boolean @default(false)
   autoPostBackInStock Boolean @default(false)
   autoPostPriceDrop   Boolean @default(false)
@@ -51,11 +51,15 @@ model ShopConfig {
   zernioWebhookId     String?
   zernioWebhookSecret String?
 
+  // Append UTM params to product URLs in post content when enabled.
+  utmEnabled Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  postLogs      PostLog[]
-  postTemplates PostTemplate[]
+  postLogs           PostLog[]
+  postTemplates      PostTemplate[]
+  inventorySnapshots InventorySnapshot[]
 }
 
 // Customizable content templates for generating post text from product data.
@@ -70,8 +74,32 @@ model PostTemplate {
   platforms       String[] // e.g. ["instagram", "twitter"]
   accountIds      String[] // Zernio social account IDs
   isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+
+  // Optional scheduling for auto-publish triggers.
+  // autoPublishDelay: minutes to wait after the event before publishing.
+  // autoPublishTime: "HH:mm" in the shop's default timezone — the post is
+  // scheduled for the next occurrence of that wall-clock time.
+  // If both are null the auto-publish path publishes immediately.
+  autoPublishDelay Int?
+  autoPublishTime  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Per-variant inventory snapshot so we can detect 0 → >0 transitions in
+// the inventory_levels/update webhook. Without this we have no "previous"
+// state to compare against.
+model InventorySnapshot {
+  id              String     @id @default(cuid())
+  shopConfigId    String
+  shopConfig      ShopConfig @relation(fields: [shopConfigId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  available       Int
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([shopConfigId, inventoryItemId])
+  @@index([shopConfigId])
 }
 
 // Tracks every post sent to Zernio so we can display status in the Shopify admin
@@ -84,16 +112,19 @@ model PostLog {
   shopifyProductId    String
   shopifyProductTitle String?
   zernioPostId        String
-  status              String     @default("pending") // pending, scheduled, published, failed, partial
+  status              String     @default("pending") // pending, scheduled, published, failed, partial, publishing
   triggerType         String // "manual", "new_product", "back_in_stock", "price_drop"
   platforms           String[]
   scheduledFor        DateTime?
   publishedAt         DateTime?
   errorMessage        String?
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([shopConfigId])
   @@index([shopifyProductId])
   @@index([zernioPostId])
+  @@index([shopConfigId, status])
+  @@index([shopConfigId, createdAt])
 }

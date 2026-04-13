@@ -89,6 +89,25 @@ export const PRODUCTS_QUERY = `#graphql
   }
 `;
 
+/** Fetch many products by id in one round-trip — used by bulk schedule. */
+export const PRODUCTS_BY_IDS_QUERY = `#graphql
+  query GetProductsByIds($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      ... on Product {
+        id
+        title
+        handle
+        description
+        onlineStoreUrl
+        featuredImage { url altText }
+        priceRangeV2 {
+          minVariantPrice { amount currencyCode }
+        }
+      }
+    }
+  }
+`;
+
 /** Fetch a single product with full detail (images, variants, description). */
 export const PRODUCT_DETAIL_QUERY = `#graphql
   query GetProduct($id: ID!) {

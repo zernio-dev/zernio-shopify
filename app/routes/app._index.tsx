@@ -1,21 +1,38 @@
 import { useEffect, useState } from "react";
 import type {
-  ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { Link, useFetcher, useLoaderData, useNavigate } from "react-router";
+import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
-import { ZernioClient, ZernioApiError } from "../lib/zernio-client";
-import { encrypt, apiKeyPreview } from "../lib/encryption.server";
 
-// ---------------------------------------------------------------------------
-// Loader
-// ---------------------------------------------------------------------------
+/**
+ * Dashboard.
+ *
+ * - When the merchant hasn't connected Zernio yet, render an inline
+ *   onboarding card that posts to /api/verify-key.
+ * - Once connected, render at-a-glance stats + the most recent posts.
+ *
+ * All "stats this week / pending / succeeded" numbers come from PostLog
+ * — no live Zernio API calls on dashboard load (Zernio webhooks update
+ * the local rows asynchronously).
+ */
+
+const STATUS_TONES: Record<
+  string,
+  "success" | "warning" | "critical" | "info" | undefined
+> = {
+  published: "success",
+  scheduled: "info",
+  pending: undefined,
+  publishing: "info",
+  partial: "warning",
+  failed: "critical",
+};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -24,205 +41,301 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   });
 
   if (!config?.onboardingComplete) {
-    return { onboarded: false, recentPosts: [] };
+    return {
+      onboarded: false,
+      hasProfile: false,
+      stats: { thisWeek: 0, pending: 0, published7d: 0 },
+      recentPosts: [],
+    };
   }
 
-  const recentPosts = await db.postLog.findMany({
-    where: { shopConfigId: config.id },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  });
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60_000);
+  const startOfWeek = new Date();
+  // Monday-start of the current week (or today if it's Monday)
+  startOfWeek.setHours(0, 0, 0, 0);
+  startOfWeek.setDate(
+    startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7),
+  );
 
-  return { onboarded: true, recentPosts };
-};
-
-// ---------------------------------------------------------------------------
-// Action - mirrors the official Shopify template pattern exactly:
-// authenticate.admin(request), then do work, then return data.
-// ---------------------------------------------------------------------------
-
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
-  const shop = session.shop;
-
-  console.log("[zernio] ACTION HIT for", shop);
-
-  const formData = await request.formData();
-  const apiKey = formData.get("apiKey") as string;
-
-  console.log("[zernio] apiKey:", apiKey ? apiKey.slice(0, 8) + "..." : "EMPTY");
-
-  if (!apiKey?.startsWith("sk_")) {
-    return { error: "API key must start with sk_" };
-  }
-
-  try {
-    const client = new ZernioClient(apiKey);
-    const user = await client.getUser();
-    const profiles = await client.getProfiles();
-
-    await db.shopConfig.upsert({
-      where: { shop },
-      create: {
-        shop,
-        zernioApiKeyEncrypted: encrypt(apiKey),
-        zernioApiKeyPreview: apiKeyPreview(apiKey),
-        defaultProfileId: profiles[0]?._id || null,
-        onboardingComplete: true,
+  const [thisWeek, pending, published7d, recentPosts] = await Promise.all([
+    db.postLog.count({
+      where: { shopConfigId: config.id, createdAt: { gte: startOfWeek } },
+    }),
+    db.postLog.count({
+      where: {
+        shopConfigId: config.id,
+        status: { in: ["pending", "scheduled", "publishing"] },
       },
-      update: {
-        zernioApiKeyEncrypted: encrypt(apiKey),
-        zernioApiKeyPreview: apiKeyPreview(apiKey),
-        defaultProfileId: profiles[0]?._id || null,
-        onboardingComplete: true,
+    }),
+    db.postLog.count({
+      where: {
+        shopConfigId: config.id,
+        status: "published",
+        publishedAt: { gte: sevenDaysAgo },
       },
-    });
+    }),
+    db.postLog.findMany({
+      where: { shopConfigId: config.id },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+    }),
+  ]);
 
-    return { success: true, plan: user.planName };
-  } catch (err) {
-    console.error("[zernio] error:", err);
-    if (err instanceof ZernioApiError && err.status === 401) {
-      return { error: "Invalid API key" };
-    }
-    return { error: "Could not connect to Zernio" };
-  }
+  return {
+    onboarded: true,
+    hasProfile: !!config.defaultProfileId,
+    stats: { thisWeek, pending, published7d },
+    recentPosts,
+  };
 };
-
-// ---------------------------------------------------------------------------
-// Component - matches official template pattern: useFetcher + submit
-// ---------------------------------------------------------------------------
 
 export default function AppIndex() {
-  const { onboarded, recentPosts } = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof action>();
-  const shopify = useAppBridge();
+  const data = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  const fetcher = useFetcher<{ success?: boolean; plan?: string; error?: string }>();
+  const shopify = useAppBridge();
 
+  const [apiKeyValue, setApiKeyValue] = useState("");
   const isLoading =
     ["loading", "submitting"].includes(fetcher.state) &&
     fetcher.formMethod === "POST";
 
-  const productId = fetcher.data?.success;
-
+  // Toast and refresh once verify succeeds
   useEffect(() => {
-    if (productId) {
+    if (fetcher.data?.success) {
       shopify.toast.show("Connected to Zernio!");
+      // Force the loader to re-run so we drop into the dashboard
+      setTimeout(() => navigate("/app", { replace: true }), 600);
     }
-  }, [productId, shopify]);
+  }, [fetcher.data, shopify, navigate]);
 
-  // Track API key value in React state (safer than DOM queries on web components)
-  const [apiKeyValue, setApiKeyValue] = useState("");
-
-  // Onboarding
-  if (!onboarded && !fetcher.data?.success) {
+  // ── Onboarding ─────────────────────────────────────────────────────
+  if (!data.onboarded && !fetcher.data?.success) {
     const handleConnect = () => {
       const val = apiKeyValue.trim();
       if (!val.startsWith("sk_")) {
-        alert("API key must start with sk_");
+        shopify.toast.show("API key must start with sk_", { isError: true });
         return;
       }
       fetcher.submit({ apiKey: val }, { method: "POST", action: "/api/verify-key" });
     };
 
     return (
-      <s-page heading="Connect to Zernio">
-        <s-button slot="primary-action" onClick={handleConnect}>
-          Connect
-        </s-button>
-
-        <s-section heading="Get started">
+      <s-page heading="Welcome to Zernio for Shopify">
+        <s-section heading="Connect your Zernio account">
           <s-paragraph>
-            Enter your Zernio API key to connect your account and start
-            scheduling social media posts for your Shopify products.
+            Paste your Zernio API key to start scheduling social posts for
+            your Shopify products across 13 platforms.
           </s-paragraph>
           <s-paragraph>
+            Need a key?{" "}
             <s-link href="https://zernio.com/dashboard/api-keys" target="_blank">
-              Get your API key at zernio.com
+              Get one at zernio.com →
             </s-link>
           </s-paragraph>
-        </s-section>
 
-        <s-section heading="API key">
           <s-text-field
-            label="API key"
-            name="zernioApiKey"
+            label="Zernio API key"
+            type="password"
             value={apiKeyValue}
             placeholder="sk_..."
             autoComplete="off"
             onChange={(e: any) => setApiKeyValue(e.currentTarget.value)}
           ></s-text-field>
+
           {fetcher.data?.error && (
             <s-banner tone="critical">{fetcher.data.error}</s-banner>
           )}
+
           <s-button
             variant="primary"
             disabled={isLoading || undefined}
             onClick={handleConnect}
           >
-            {isLoading ? "Connecting..." : "Connect to Zernio"}
+            {isLoading ? "Connecting…" : "Connect"}
           </s-button>
         </s-section>
 
-        {fetcher.data?.success && (
-          <s-section heading="Success!">
-            <s-banner tone="success">
-              Connected to Zernio ({fetcher.data.plan} plan). Reload to continue.
-            </s-banner>
-          </s-section>
-        )}
+        <s-section slot="aside" heading="What you'll get">
+          <s-unordered-list>
+            <s-list-item>
+              Browse your products and post to social with one click
+            </s-list-item>
+            <s-list-item>
+              Schedule posts in your timezone, or auto-publish on price
+              drop / new product / back in stock
+            </s-list-item>
+            <s-list-item>
+              Customize captions and images per platform
+            </s-list-item>
+            <s-list-item>
+              Bulk-schedule a whole catalog from the product list
+            </s-list-item>
+          </s-unordered-list>
+        </s-section>
       </s-page>
     );
   }
 
-  // Dashboard
+  // ── Dashboard ──────────────────────────────────────────────────────
   return (
     <s-page heading="Zernio">
-      <s-section heading="Quick actions">
-        <s-stack direction="inline" gap="base">
-          {/* Navigate within the iframe — App Bridge syncs the parent admin URL.
-              The previous window.top.location hack tried to push the admin to
-              /apps/zernio/* which doesn't exist as a top-level route. */}
-          <s-button variant="primary" onClick={() => navigate("/app/products")}>
-            Browse products
-          </s-button>
-          <s-button variant="primary" onClick={() => navigate("/app/posts")}>
-            View posts
-          </s-button>
-          <s-button onClick={() => navigate("/app/settings")}>Settings</s-button>
-        </s-stack>
+      <s-button slot="primary-action" variant="primary" onClick={() => navigate("/app/products")}>
+        Browse products
+      </s-button>
+      <s-button slot="secondary-actions" onClick={() => navigate("/app/templates")}>
+        Templates
+      </s-button>
+
+      {/* Stat cards */}
+      <s-section>
+        <s-grid gridTemplateColumns="repeat(auto-fit, minmax(180px, 1fr))" gap="base">
+          <StatCard
+            label="Posts created this week"
+            value={data.stats.thisWeek}
+            tone="info"
+          />
+          <StatCard
+            label="Pending or scheduled"
+            value={data.stats.pending}
+            tone={data.stats.pending > 0 ? "info" : undefined}
+          />
+          <StatCard
+            label="Published in last 7 days"
+            value={data.stats.published7d}
+            tone={data.stats.published7d > 0 ? "success" : undefined}
+          />
+        </s-grid>
       </s-section>
 
+      {/* Recent posts */}
       <s-section heading="Recent posts">
-        {recentPosts.length === 0 ? (
-          <s-paragraph>
-            No posts yet. Go to <s-link url="/app/products">Products</s-link> to
-            schedule your first post.
-          </s-paragraph>
+        {data.recentPosts.length === 0 ? (
+          <s-empty-state heading="No posts yet">
+            <s-paragraph>
+              Schedule your first post from a product, or set up a
+              template that auto-publishes when products change.
+            </s-paragraph>
+            <s-stack direction="inline" gap="small-200">
+              <s-button variant="primary" onClick={() => navigate("/app/products")}>
+                Browse products
+              </s-button>
+              <s-button onClick={() => navigate("/app/templates")}>
+                Create a template
+              </s-button>
+            </s-stack>
+          </s-empty-state>
         ) : (
-          <s-table>
-            <s-table-header>
-              <s-table-header-cell>Product</s-table-header-cell>
-              <s-table-header-cell>Status</s-table-header-cell>
-            </s-table-header>
-            <s-table-body>
-              {recentPosts.map(
-                (post: { id: string; shopifyProductTitle: string | null; status: string }) => (
-                  <s-table-row key={post.id}>
-                    <s-table-cell>{post.shopifyProductTitle || "Unknown"}</s-table-cell>
-                    <s-table-cell>
-                      <s-badge tone={post.status === "published" ? "success" : post.status === "failed" ? "critical" : undefined}>
+          <s-stack direction="block" gap="small-200">
+            {data.recentPosts.map((post: {
+              id: string;
+              shopifyProductTitle: string | null;
+              status: string;
+              triggerType: string;
+              platforms: string[];
+              createdAt: string | Date;
+              scheduledFor: string | Date | null;
+              publishedAt: string | Date | null;
+            }) => (
+              <s-box
+                key={post.id}
+                padding="base"
+                borderWidth="base"
+                borderRadius="base"
+              >
+                <s-stack direction="inline" gap="base" alignItems="center">
+                  <s-stack direction="block" gap="small-100">
+                    <s-text fontWeight="bold">
+                      {post.shopifyProductTitle || "Unknown product"}
+                    </s-text>
+                    <s-stack direction="inline" gap="small-100" alignItems="center">
+                      <s-badge tone={STATUS_TONES[post.status]}>
                         {post.status}
                       </s-badge>
-                    </s-table-cell>
-                  </s-table-row>
-                ),
-              )}
-            </s-table-body>
-          </s-table>
+                      <s-badge>
+                        {post.triggerType.replace("_", " ")}
+                      </s-badge>
+                      {post.platforms.length > 0 && (
+                        <s-text color="subdued">
+                          {post.platforms.join(" · ")}
+                        </s-text>
+                      )}
+                    </s-stack>
+                    <s-text color="subdued">
+                      {post.publishedAt
+                        ? `Published ${formatRelative(post.publishedAt)}`
+                        : post.scheduledFor
+                          ? `Scheduled for ${formatAbsolute(post.scheduledFor)}`
+                          : `Created ${formatRelative(post.createdAt)}`}
+                    </s-text>
+                  </s-stack>
+                </s-stack>
+              </s-box>
+            ))}
+            <s-button onClick={() => navigate("/app/posts")}>View all posts</s-button>
+          </s-stack>
         )}
       </s-section>
+
+      {/* Helpful aside if user hasn't picked a default profile yet */}
+      {!data.hasProfile && (
+        <s-section slot="aside" heading="Set a default profile">
+          <s-paragraph>
+            You haven't picked a default Zernio profile. Posts created
+            from this app will use your first connected profile.
+          </s-paragraph>
+          <s-button onClick={() => navigate("/app/settings")}>
+            Open settings
+          </s-button>
+        </s-section>
+      )}
     </s-page>
   );
+}
+
+function StatCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone?: "info" | "success" | "critical" | undefined;
+}) {
+  return (
+    <s-box padding="large-100" borderWidth="base" borderRadius="base">
+      <s-stack direction="block" gap="small-100">
+        <s-text color="subdued">{label}</s-text>
+        <s-stack direction="inline" gap="small-200" alignItems="baseline">
+          <s-heading>{value}</s-heading>
+          {value > 0 && tone && <s-badge tone={tone}>•</s-badge>}
+        </s-stack>
+      </s-stack>
+    </s-box>
+  );
+}
+
+function formatRelative(d: string | Date): string {
+  const date = typeof d === "string" ? new Date(d) : d;
+  const diffMs = Date.now() - date.getTime();
+  const mins = Math.floor(diffMs / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString();
+}
+
+function formatAbsolute(d: string | Date): string {
+  const date = typeof d === "string" ? new Date(d) : d;
+  return date.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export const headers: HeadersFunction = (headersArgs) => {

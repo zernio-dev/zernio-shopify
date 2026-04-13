@@ -3,7 +3,7 @@ import type {
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 
@@ -12,9 +12,19 @@ import db from "../db.server";
 import { decrypt } from "../lib/encryption.server";
 import { ZernioClient } from "../lib/zernio-client";
 
-// ---------------------------------------------------------------------------
-// Loader
-// ---------------------------------------------------------------------------
+/**
+ * Settings page — organized into clearly-headed sections rather than tabs
+ * (Polaris web components don't ship a tabs primitive). The layout is
+ * one column with strong visual hierarchy via s-section heading + Help
+ * aside.
+ *
+ * Sections:
+ *   - Connection: API key
+ *   - Defaults: profile, timezone
+ *   - Auto-publish: product/price-drop/back-in-stock toggles
+ *   - Links: UTM tracking toggle
+ *   - Danger: disconnect Zernio
+ */
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
@@ -22,12 +32,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const config = await db.shopConfig.findUnique({
     where: { shop: session.shop },
   });
+  if (!config) return { configured: false };
 
-  if (!config) {
-    return { configured: false };
-  }
-
-  // Fetch profiles so user can change their default
   let profiles: Array<{ _id: string; name: string }> = [];
   try {
     const apiKey = decrypt(config.zernioApiKeyEncrypted);
@@ -35,13 +41,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const fetched = await client.getProfiles();
     profiles = fetched.map((p) => ({ _id: p._id, name: p.name }));
   } catch {
-    // Key may be invalid; let user re-enter
+    // Bad key — leave profiles empty so the user sees the option to re-enter
   }
 
-  // Backfill defaultTimezone from the actual shop timezone configured in
-  // Shopify admin. Legacy rows have the Prisma fallback "UTC" which rarely
-  // matches the merchant's real zone. We pull shop.ianaTimezone via the
-  // GraphQL Admin API and use it when the stored value looks untouched.
+  // Backfill defaultTimezone from shop.ianaTimezone when we still have the
+  // legacy "UTC" placeholder (the Prisma default).
   let defaultTimezone = config.defaultTimezone;
   if (!defaultTimezone || defaultTimezone === "UTC") {
     try {
@@ -58,21 +62,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         });
       }
     } catch {
-      // Non-fatal: fall through with whatever we had
+      // Non-fatal
     }
   }
 
-  // Build grouped IANA timezone list for the timezone picker.
-  // Intl.supportedValuesOf returns the canonical list (~400 entries);
-  // grouping by region prefix keeps the dropdown scannable. We also make
-  // sure UTC is always present as a fallback so legacy "UTC" rows match.
+  // Timezone option groups
   const allZones = new Set<string>(Intl.supportedValuesOf("timeZone"));
   allZones.add("UTC");
-  // Include the merchant's current zone in case it's somehow missing from
-  // the platform's ICU tables (prevents the picker ever showing the wrong
-  // default again).
   if (defaultTimezone) allZones.add(defaultTimezone);
-
   const zonesByRegion: Record<string, string[]> = {};
   for (const z of allZones) {
     const region = z.includes("/") ? z.split("/")[0] : "Other";
@@ -84,64 +81,65 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   return {
     configured: true,
+    shop: session.shop,
     keyPreview: config.zernioApiKeyPreview || "sk_***",
     defaultProfileId: config.defaultProfileId,
     defaultTimezone,
     autoPostNewProducts: config.autoPostNewProducts,
+    autoPostBackInStock: config.autoPostBackInStock,
     autoPostPriceDrop: config.autoPostPriceDrop,
+    utmEnabled: config.utmEnabled,
     profiles,
     timezoneGroups,
   };
 };
 
-// No action handler here. Form submissions use XHR to /api/update-settings
-// to bypass the authenticate.admin() 410 issue on POST in embedded apps.
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default function Settings() {
-  const loaderData = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
   const shopify = useAppBridge();
+  const navigate = useNavigate();
 
-  const [keySubmitState, setKeySubmitState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  // ── State (all hooks above any early return) ───────────────────────
+  const [keySubmitState, setKeySubmitState] = useState<
+    "idle" | "sending" | "done" | "error"
+  >("idle");
   const [keyError, setKeyError] = useState("");
-  const [settingsSubmitState, setSettingsSubmitState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [settingsSubmitState, setSettingsSubmitState] = useState<
+    "idle" | "sending" | "done" | "error"
+  >("idle");
   const [settingsError, setSettingsError] = useState("");
 
-  // Track form values in React state (safer than DOM queries on web components)
   const [apiKeyValue, setApiKeyValue] = useState("");
-  const [profileId, setProfileId] = useState(loaderData.defaultProfileId || "");
-  const [timezone, setTimezone] = useState(loaderData.defaultTimezone || "UTC");
-  const [autoPostNewProducts, setAutoPostNewProducts] = useState(loaderData.autoPostNewProducts || false);
-  const [autoPostPriceDrop, setAutoPostPriceDrop] = useState(loaderData.autoPostPriceDrop || false);
+  const [profileId, setProfileId] = useState(data.defaultProfileId || "");
+  const [timezone, setTimezone] = useState(data.defaultTimezone || "UTC");
+  const [autoPostNewProducts, setAutoPostNewProducts] = useState(
+    data.autoPostNewProducts || false,
+  );
+  const [autoPostBackInStock, setAutoPostBackInStock] = useState(
+    data.autoPostBackInStock || false,
+  );
+  const [autoPostPriceDrop, setAutoPostPriceDrop] = useState(
+    data.autoPostPriceDrop || false,
+  );
+  const [utmEnabled, setUtmEnabled] = useState(data.utmEnabled || false);
 
-  // All hooks must be above this line. Early returns below.
-
-  if (!loaderData.configured) {
+  if (!data.configured) {
     return (
       <s-page heading="Settings">
         <s-section>
-          <s-banner tone="warning">
-            Please complete setup first.
-          </s-banner>
-          <s-button href="/app">Go to setup</s-button>
+          <s-banner tone="warning">Please complete setup first.</s-banner>
+          <s-button onClick={() => navigate("/app")}>Go to setup</s-button>
         </s-section>
       </s-page>
     );
   }
 
-  /**
-   * Submit API key update via XHR to /api/update-settings.
-   * Uses XMLHttpRequest to bypass App Bridge's fetch interceptor.
-   */
+  // ── Handlers ───────────────────────────────────────────────────────
   const handleUpdateKey = () => {
     if (!apiKeyValue.startsWith("sk_")) {
       setKeyError("API key must start with sk_");
       return;
     }
-
     setKeySubmitState("sending");
     setKeyError("");
 
@@ -157,14 +155,15 @@ export default function Settings() {
         const result = JSON.parse(xhr.responseText);
         if (result.success) {
           setKeySubmitState("done");
-          shopify.toast.show(result.success);
+          setApiKeyValue("");
+          shopify.toast.show("API key updated");
         } else {
           setKeySubmitState("error");
           setKeyError(result.error || "Unknown error");
         }
       } catch {
         setKeySubmitState("error");
-        setKeyError("Invalid response from server");
+        setKeyError("Bad response from server");
       }
     };
     xhr.onerror = () => {
@@ -174,10 +173,6 @@ export default function Settings() {
     xhr.send(body.toString());
   };
 
-  /**
-   * Submit preferences update via XHR to /api/update-settings.
-   * Reads values from React state (Polaris web components update state via onChange).
-   */
   const handleUpdateSettings = () => {
     setSettingsSubmitState("sending");
     setSettingsError("");
@@ -187,7 +182,9 @@ export default function Settings() {
     body.append("profileId", profileId);
     body.append("timezone", timezone);
     if (autoPostNewProducts) body.append("autoPostNewProducts", "on");
+    if (autoPostBackInStock) body.append("autoPostBackInStock", "on");
     if (autoPostPriceDrop) body.append("autoPostPriceDrop", "on");
+    if (utmEnabled) body.append("utmEnabled", "on");
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/update-settings", true);
@@ -197,14 +194,14 @@ export default function Settings() {
         const result = JSON.parse(xhr.responseText);
         if (result.success) {
           setSettingsSubmitState("done");
-          shopify.toast.show(result.success);
+          shopify.toast.show("Settings saved");
         } else {
           setSettingsSubmitState("error");
           setSettingsError(result.error || "Unknown error");
         }
       } catch {
         setSettingsSubmitState("error");
-        setSettingsError("Invalid response from server");
+        setSettingsError("Bad response from server");
       }
     };
     xhr.onerror = () => {
@@ -214,19 +211,24 @@ export default function Settings() {
     xhr.send(body.toString());
   };
 
+  // Live preview of UTM injection on the merchant's product URL
+  const utmExample = (() => {
+    const baseUrl = `https://${data.shop}/products/sample`;
+    if (!utmEnabled) return baseUrl;
+    return `${baseUrl}?utm_source=zernio&utm_medium=social&utm_campaign=instagram`;
+  })();
+
   return (
     <s-page heading="Settings">
-      {/* API Key Section */}
-      <s-section heading="Zernio API key">
+      {/* ── Connection ──────────────────────────────────────── */}
+      <s-section heading="Zernio connection">
         <s-paragraph>
-          Current key: <s-text fontWeight="bold">{loaderData.keyPreview}</s-text>
+          Current key: <s-text fontWeight="bold">{data.keyPreview}</s-text>
         </s-paragraph>
-        {keyError && (
-          <s-banner tone="critical">{keyError}</s-banner>
-        )}
+        {keyError && <s-banner tone="critical">{keyError}</s-banner>}
         <s-text-field
-          label="New API key"
-          name="apiKeyInput"
+          label="Replace API key"
+          details="Paste a new key to rotate. The current key keeps working until this saves."
           type="password"
           value={apiKeyValue}
           placeholder="sk_..."
@@ -234,49 +236,44 @@ export default function Settings() {
           onChange={(e: any) => setApiKeyValue(e.currentTarget.value)}
         ></s-text-field>
         <s-button
-          disabled={keySubmitState === "sending" || undefined}
+          disabled={
+            keySubmitState === "sending" || !apiKeyValue || undefined
+          }
           onClick={handleUpdateKey}
         >
-          {keySubmitState === "sending" ? "Updating..." : "Update key"}
+          {keySubmitState === "sending" ? "Updating…" : "Update API key"}
         </s-button>
       </s-section>
 
-      {/* Preferences Section */}
-      <s-section heading="Preferences">
+      {/* ── Defaults ────────────────────────────────────────── */}
+      <s-section heading="Defaults">
         {settingsError && (
           <s-banner tone="critical">{settingsError}</s-banner>
         )}
 
-        {loaderData.profiles && loaderData.profiles.length > 0 && (
-          // s-select is a Polaris web component and only renders <s-option>
-          // children (native <option> elements are ignored, which is why the
-          // picker appeared empty). See:
-          // https://shopify.dev/docs/api/app-home/web-components/forms/select
+        {data.profiles && data.profiles.length > 0 && (
           <s-select
             label="Default Zernio profile"
-            name="profileIdSelect"
+            details="New posts use this profile's connected accounts unless overridden"
             value={profileId}
             onChange={(e: any) => setProfileId(e.currentTarget.value)}
           >
             <s-option value="">None</s-option>
-            {loaderData.profiles.map(
-              (p: { _id: string; name: string }) => (
-                <s-option key={p._id} value={p._id}>
-                  {p.name}
-                </s-option>
-              ),
-            )}
+            {data.profiles.map((p: { _id: string; name: string }) => (
+              <s-option key={p._id} value={p._id}>
+                {p.name}
+              </s-option>
+            ))}
           </s-select>
         )}
 
         <s-select
           label="Default timezone"
-          name="timezoneSelect"
+          details="Used to interpret scheduled times (auto-detected from your shop)"
           value={timezone}
-          details="Used to interpret scheduled post times"
           onChange={(e: any) => setTimezone(e.currentTarget.value)}
         >
-          {loaderData.timezoneGroups?.map(
+          {data.timezoneGroups?.map(
             (group: { region: string; zones: string[] }) => (
               <s-option-group key={group.region} label={group.region}>
                 {group.zones.map((z: string) => (
@@ -288,52 +285,95 @@ export default function Settings() {
             ),
           )}
         </s-select>
+      </s-section>
 
-        <s-heading>Auto-publish</s-heading>
+      {/* ── Auto-publish ────────────────────────────────────── */}
+      <s-section heading="Auto-publish triggers">
         <s-paragraph>
-          Publish to all connected accounts the moment a product event
-          happens in Shopify. Posts go live immediately — no scheduling,
-          no review step.
+          Publish automatically when a product event happens in Shopify.
+          Posts go live immediately by default — set a delay or fixed
+          time on a Template if you need scheduling.
         </s-paragraph>
+
         <s-checkbox
-          label="Publish when a product is created"
-          details="Posts to every connected account as soon as the product goes active."
-          name="autoPostNewProducts"
+          label="When a product is created"
+          details="Fires on products/create. Skips drafts."
           checked={autoPostNewProducts || undefined}
           onChange={() => setAutoPostNewProducts((prev) => !prev)}
         ></s-checkbox>
+
         <s-checkbox
-          label="Publish when a product goes on sale"
-          details="Triggers when a compare-at price is set above the current price. Dedupes for 1 hour per product."
-          name="autoPostPriceDrop"
+          label="When a product goes on sale"
+          details="Fires when compare-at price is set above current price. Dedupes per product for 1 hour."
           checked={autoPostPriceDrop || undefined}
           onChange={() => setAutoPostPriceDrop((prev) => !prev)}
         ></s-checkbox>
 
+        <s-checkbox
+          label="When a product is back in stock"
+          details="Fires when any variant goes from 0 to any positive count. Dedupes per product for 24 hours."
+          checked={autoPostBackInStock || undefined}
+          onChange={() => setAutoPostBackInStock((prev) => !prev)}
+        ></s-checkbox>
+      </s-section>
+
+      {/* ── Links ───────────────────────────────────────────── */}
+      <s-section heading="Links">
+        <s-checkbox
+          label="Add UTM tracking to product links"
+          details="Appends utm_source/utm_medium/utm_campaign to your storefront URLs in posts so you can attribute social traffic in analytics."
+          checked={utmEnabled || undefined}
+          onChange={() => setUtmEnabled((prev) => !prev)}
+        ></s-checkbox>
+
+        <s-box
+          padding="small-200"
+          borderWidth="base"
+          borderRadius="base"
+          background="subdued"
+        >
+          <s-stack direction="block" gap="small-100">
+            <s-text color="subdued">Example link:</s-text>
+            <s-text>{utmExample}</s-text>
+          </s-stack>
+        </s-box>
+      </s-section>
+
+      {/* ── Save bar ────────────────────────────────────────── */}
+      <s-section>
         <s-button
           variant="primary"
           disabled={settingsSubmitState === "sending" || undefined}
           onClick={handleUpdateSettings}
         >
-          {settingsSubmitState === "sending" ? "Saving..." : "Save settings"}
+          {settingsSubmitState === "sending" ? "Saving…" : "Save settings"}
         </s-button>
+      </s-section>
+
+      {/* ── Danger zone ─────────────────────────────────────── */}
+      <s-section heading="Disconnect">
+        <s-paragraph>
+          To remove this app entirely, uninstall it from your Shopify
+          admin's Apps page. Uninstalling deletes all of this app's data
+          for your store (templates, post history, settings).
+        </s-paragraph>
       </s-section>
 
       <s-section slot="aside" heading="Help">
         <s-unordered-list>
           <s-list-item>
             <s-link href="https://zernio.com/dashboard/api-keys" target="_blank">
-              Manage API keys
+              Manage API keys at zernio.com →
             </s-link>
           </s-list-item>
           <s-list-item>
             <s-link href="https://docs.zernio.com" target="_blank">
-              Zernio API docs
+              Zernio API docs →
             </s-link>
           </s-list-item>
           <s-list-item>
             <s-link href="https://github.com/zernio-dev/zernio-shopify" target="_blank">
-              Source code
+              Source code on GitHub →
             </s-link>
           </s-list-item>
         </s-unordered-list>
