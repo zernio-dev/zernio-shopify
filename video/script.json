@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "voice_macos": "Samantha",
+    "voice_elevenlabs": "EXAVITQu4vr4xnSDxMaL",
+    "model_elevenlabs": "eleven_turbo_v2_5",
+    "rate_macos": 180,
+    "title": "Zernio for Shopify — App Store demo",
+    "target_seconds": 180
+  },
+  "scenes": [
+    {
+      "id": "01-intro",
+      "asset": "assets/app-icon-1200.png",
+      "duration": 8,
+      "narration": "Zernio for Shopify turns your products into scheduled social media posts across thirteen platforms. It's free, open source, and built on Zernio's social APIs."
+    },
+    {
+      "id": "02-home",
+      "asset": "assets/01-home.png",
+      "duration": 14,
+      "narration": "When you install, you paste your Zernio API key and the dashboard is ready. Stat cards track your posts, and recent activity lives right on the home screen. If you haven't posted yet, the app tells you exactly what to do next — browse products, or create a template."
+    },
+    {
+      "id": "03-products",
+      "asset": "assets/02-products.png",
+      "duration": 15,
+      "narration": "The products grid pulls in your Shopify catalog. Each card shows a badge with the number of social posts you've already created for that product. Multi-select with checkboxes and a sticky action bar appears instantly. Bulk schedule an entire drop in one go."
+    },
+    {
+      "id": "04-compose",
+      "asset": "assets/03-compose.png",
+      "duration": 20,
+      "narration": "The composer pre-fills a caption from product data. Pick the accounts to post to, and a per-platform override card appears for each. Write one shared caption, then override the text or images per platform — different copy for X versus LinkedIn versus Instagram — with live character counts built in. Schedule for any time in your shop's timezone, or publish immediately."
+    },
+    {
+      "id": "05-bulk",
+      "asset": "assets/04-bulk-schedule.png",
+      "duration": 18,
+      "narration": "Bulk schedule takes the selected products and stages them across any cadence you pick — one every fifteen minutes, one an hour, two a day. The preview timeline shows exactly when each post will go live before you commit. Perfect for a weekly product drop or an end-of-season sale."
+    },
+    {
+      "id": "06-settings",
+      "asset": "assets/05-settings.png",
+      "duration": 20,
+      "narration": "Settings holds your connection, defaults, and the auto-publish triggers. Post automatically on new product, on price drop, or when a variant comes back in stock. Each trigger is template-gated — no template means no post, so you can never accidentally broadcast to every connected account. And one toggle adds UTM tracking to every storefront URL for attribution."
+    },
+    {
+      "id": "07-close",
+      "asset": "assets/app-icon-1200.png",
+      "duration": 10,
+      "narration": "That's Zernio for Shopify. Free to install, MIT licensed, and your data is encrypted and deleted when you uninstall. Install from the Shopify App Store, connect your Zernio API key, and start posting in under two minutes."
+    }
+  ]
+}

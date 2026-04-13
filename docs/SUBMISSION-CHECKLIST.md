@@ -27,7 +27,7 @@ Everything required to submit this app for Shopify App Store review. Code-level 
 
 - [ ] **Host the privacy policy at a public URL** — suggest `zernio.com/shopify/privacy` or `shopify.zernio.com/privacy`. Just serve the contents of `docs/PRIVACY-POLICY.md` as HTML. Reviewer will check the URL opens.
 - [ ] **Confirm support email is monitored** — `support@zernio.com` is referenced throughout. If that inbox isn't already staffed, create a Crisp / helpdesk rule to route it or change to a dedicated alias.
-- [ ] **Create a reviewer-only Zernio account** and generate a test API key (`sk_test_...`) for them. Include it in the submission form's notes field.
+- [x] **Reviewer API key issued** — `sk_18deb85a0b1d331bcfed7f6c8934177dd6f73d5ea5d1dadb506425f9604071d9` tied to demo@zernio.com (Professional plan, 5 active accounts connected). Paste into the submission reviewer notes. Revoke after review is complete via Zernio dashboard.
 
 ### Creative assets
 

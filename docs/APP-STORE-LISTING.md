@@ -114,8 +114,13 @@ Alt options:
 >
 > ### Test credentials
 >
-> Zernio sandbox API key: `sk_test_<REPLACE_BEFORE_SUBMISSION>`
-> (Tied to a reviewer-only Zernio account with 3 dummy social accounts connected.)
+> Zernio API key (reviewer-only, Professional plan):
+> `sk_18deb85a0b1d331bcfed7f6c8934177dd6f73d5ea5d1dadb506425f9604071d9`
+>
+> Tied to demo@zernio.com which has 5 active social accounts already
+> connected under a "Demo Profile": Facebook, Instagram, TikTok,
+> Twitter/X, YouTube. That profile is set as default so no additional
+> setup is required before testing.
 >
 > ### Scopes
 >

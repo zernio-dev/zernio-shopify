@@ -61,3 +61,6 @@ auth.json
 verify-all.mjs
 shots/
 tests/
+assets/
+assets-generator.mjs
+video/out/
