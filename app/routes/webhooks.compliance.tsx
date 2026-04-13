@@ -27,12 +27,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       break;
 
     case "SHOP_REDACT": {
-      // Delete all data for this shop. Cascading deletes handle PostLog and
-      // PostTemplate via the ShopConfig relation.
+      // Delete all data for this shop. Cascading deletes handle PostLog,
+      // PostTemplate and InventorySnapshot via the ShopConfig relation,
+      // but we also delete them explicitly for visibility in audit logs.
       const config = await db.shopConfig.findUnique({ where: { shop } });
       if (config) {
         await db.postLog.deleteMany({ where: { shopConfigId: config.id } });
         await db.postTemplate.deleteMany({ where: { shopConfigId: config.id } });
+        await db.inventorySnapshot.deleteMany({
+          where: { shopConfigId: config.id },
+        });
         await db.shopConfig.delete({ where: { shop } });
       }
       // Also clean up any remaining sessions
