@@ -60,3 +60,4 @@ auth.json
 # Local verification artifacts
 verify-all.mjs
 shots/
+tests/
