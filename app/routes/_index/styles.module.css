@@ -1,420 +1,109 @@
-/* Zernio × Shopify — Single-view statement landing.
- *
- * Design intent: the page IS the statement. One viewport, no header, no
- * footer, no sections. Massive monospace typography does the work.
- *
- * Brand system (from libs/design-system/tokens.ts):
- *   cream #F0EFEB · charcoal #2D2D2D · coral #EB3514 · Menlo mono
- */
-
-:root {
-  --cream: #F0EFEB;
-  --cream-deep: #E8E7E2;
-  --charcoal: #2D2D2D;
-  --charcoal-muted: #6B6B6B;
-  --coral: #EB3514;
-  --burgundy: #660202;
-  --shopify-green: #95BF47;
-}
-
-/* -------------------------------------------------------------------------
- * Shell
- * ------------------------------------------------------------------------- */
+/* Zernio × Shopify — Simple landing.
+ * Cream bg, charcoal text, coral accent, Menlo mono. That's it. */
 
 .page {
-  position: relative;
   min-height: 100vh;
-  background: var(--cream);
-  color: var(--charcoal);
+  background: #F0EFEB;
+  color: #2D2D2D;
   font-family: Menlo, Consolas, Monaco, "Liberation Mono", "Courier New", monospace;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 2rem 2.5rem 0;
-  /* Subtle grain: faint radial dot pattern anchors the statement without
-   * stealing attention. */
-  background-image:
-    radial-gradient(circle at 1px 1px, rgba(45, 45, 45, 0.06) 1px, transparent 0);
-  background-size: 28px 28px;
-}
-
-/* Decorative coral splash blurred into the corner — art, not decoration */
-.page::before {
-  content: "";
-  position: absolute;
-  top: -200px;
-  right: -150px;
-  width: 620px;
-  height: 620px;
-  background: radial-gradient(circle, rgba(235, 53, 20, 0.18), transparent 60%);
-  filter: blur(40px);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.page::after {
-  content: "";
-  position: absolute;
-  bottom: -260px;
-  left: -180px;
-  width: 720px;
-  height: 720px;
-  background: radial-gradient(circle, rgba(102, 2, 2, 0.10), transparent 60%);
-  filter: blur(50px);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* -------------------------------------------------------------------------
- * Chrome (tiny mark top-left, utility links top-right)
- * ------------------------------------------------------------------------- */
-
-.mark {
-  position: relative;
-  z-index: 10;
-  display: inline-flex;
   align-items: center;
-  gap: 0.625rem;
-  text-decoration: none;
-  color: inherit;
-  width: fit-content;
-}
-
-.mark img {
-  width: 32px;
-  height: 32px;
-  border-radius: 7px;
-  display: block;
-  box-shadow: 0 4px 14px rgba(235, 53, 20, 0.25);
-}
-
-.corner {
-  position: absolute;
-  top: 2rem;
-  right: 2.5rem;
-  z-index: 10;
-  font-size: 0.75rem;
-  color: var(--charcoal-muted);
-  display: flex;
-  gap: 0.5rem;
-}
-
-.corner a {
-  color: var(--charcoal-muted);
-  text-decoration: none;
-  transition: color 150ms ease;
-}
-
-.corner a:hover { color: var(--coral); }
-
-/* -------------------------------------------------------------------------
- * Statement — the real design
- * ------------------------------------------------------------------------- */
-
-.statement {
-  position: relative;
-  z-index: 5;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
-  padding: 2rem 0;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  gap: 1.5rem;
+}
+
+.logo {
+  height: 24px;
+  width: auto;
+  margin-bottom: 1rem;
 }
 
 .headline {
-  font-family: inherit;
+  font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 700;
-  /* Scales from ~52px on phone to ~150px on desktop */
-  font-size: clamp(2.75rem, 9vw, 8rem);
-  line-height: 0.95;
-  letter-spacing: -0.045em;
-  margin: 0 0 3rem;
-  text-align: left;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0;
+  max-width: 720px;
 }
 
-.lineSell,
-.lineShout {
-  display: block;
+.coral {
+  color: #EB3514;
 }
 
-/* "Sell on [bag] Shopify." — inline bag sits right next to the word */
-.lineSell {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0 0.3em;
-}
-
-.inlineShopifyWrap {
-  display: inline-flex;
-  align-items: center;
-}
-
-.inlineShopify {
-  width: 0.78em;
-  height: 0.9em;
-  flex-shrink: 0;
-  transform: translateY(0.03em);
-  filter: drop-shadow(0 6px 14px rgba(149, 191, 71, 0.35));
-}
-
-.shoutTail {
-  /* The trailing phrase stays charcoal — contrast against the coral Shout */
-  color: var(--charcoal);
-}
-
-/* "Shout" — the coral word with a live shimmer sweep */
-.shoutWord {
-  display: inline-block;
-  color: var(--coral);
-  position: relative;
-  background: linear-gradient(
-    100deg,
-    var(--coral) 0%,
-    var(--coral) 30%,
-    #ff8060 50%,
-    var(--coral) 70%,
-    var(--coral) 100%
-  );
-  background-size: 300% 100%;
-  background-position: 0% 50%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 4.5s ease-in-out infinite;
-}
-
-/* Shimmer sweep across the coral word */
-@keyframes shimmer {
-  0%, 100% { background-position: 120% 50%; }
-  50%      { background-position: -20% 50%; }
-}
-
-/* Subtle vertical mask for the word (adds depth without noise) */
-.lineShout {
-  position: relative;
-}
-
-/* -------------------------------------------------------------------------
- * Actions row
- * ------------------------------------------------------------------------- */
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  animation: fadeUp 700ms ease 300ms both;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+.sub {
+  font-size: 0.9375rem;
+  color: #6B6B6B;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 480px;
 }
 
 .cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 1rem 1.5rem;
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.875rem 1.75rem;
   font-family: inherit;
   font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 600;
   color: #fff;
-  background: var(--charcoal);
-  border: none;
-  border-radius: 12px;
+  background: #EB3514;
+  border-radius: 10px;
   text-decoration: none;
-  position: relative;
-  overflow: hidden;
-  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.06),
-    0 8px 20px rgba(45, 45, 45, 0.15);
+  transition: background 150ms ease;
 }
 
-/* Coral flood on hover — the CTA becomes the brand color when touched */
-.cta::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--coral);
-  transform: translateY(100%);
-  transition: transform 280ms cubic-bezier(0.7, 0, 0.3, 1);
-  z-index: 0;
-}
-
-.cta:hover::before { transform: translateY(0); }
-.cta:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.06),
-    0 14px 28px rgba(235, 53, 20, 0.28);
-}
-
-.cta > * {
-  position: relative;
-  z-index: 1;
-}
-
-.cta svg {
-  transition: transform 200ms ease;
-}
-
-.cta:hover svg {
-  transform: translateX(3px);
-}
+.cta:hover { background: #D02E10; }
 
 .meta {
   font-size: 0.75rem;
-  color: var(--charcoal-muted);
-  letter-spacing: -0.01em;
+  color: #6B6B6B;
+  margin: 0;
 }
 
-/* -------------------------------------------------------------------------
- * Ribbon — continuous marquee of supported platforms
- * ------------------------------------------------------------------------- */
-
-.ribbon {
-  position: relative;
-  z-index: 5;
-  margin-top: auto;
-  padding: 1.25rem 0 1.25rem;
-  border-top: 1px solid rgba(45, 45, 45, 0.08);
-  overflow: hidden;
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 8%,
-    black 92%,
-    transparent
-  );
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 8%,
-    black 92%,
-    transparent
-  );
+.meta a {
+  color: #6B6B6B;
+  text-decoration: underline;
+  text-decoration-color: #D9D8D3;
+  text-underline-offset: 3px;
 }
 
-.ribbonTrack {
-  display: flex;
-  gap: 2.5rem;
-  width: max-content;
-  animation: scroll 42s linear infinite;
-}
-
-@keyframes scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-.platform {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-size: 0.8125rem;
-  color: var(--charcoal);
-  letter-spacing: -0.005em;
-  white-space: nowrap;
-  opacity: 0.72;
-  transition: opacity 200ms ease, color 200ms ease;
-}
-
-.platform:hover {
-  opacity: 1;
-  color: var(--coral);
-}
-
-.platformDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--coral);
-  display: inline-block;
-}
-
-/* -------------------------------------------------------------------------
- * Login fallback — only for returning merchants. Sits bottom-right corner.
- * ------------------------------------------------------------------------- */
+.meta a:hover { color: #EB3514; }
 
 .login {
-  position: absolute;
-  bottom: 4.5rem;
-  right: 2.5rem;
-  z-index: 10;
   display: flex;
   gap: 0.5rem;
-  background: var(--cream-deep);
-  padding: 0.35rem 0.35rem 0.35rem 0.85rem;
-  border-radius: 10px;
-  border: 1px solid rgba(45, 45, 45, 0.08);
+  margin-top: 2rem;
 }
 
 .loginInput {
+  padding: 0.5rem 0.75rem;
   font-family: inherit;
   font-size: 0.75rem;
-  color: var(--charcoal);
-  background: transparent;
-  border: none;
+  color: #2D2D2D;
+  background: #fff;
+  border: 1px solid #D9D8D3;
+  border-radius: 8px;
+  width: 220px;
   outline: none;
-  width: 200px;
 }
 
-.loginInput::placeholder {
-  color: var(--charcoal-muted);
-}
+.loginInput:focus { border-color: #EB3514; }
+.loginInput::placeholder { color: #6B6B6B; }
 
 .loginBtn {
+  padding: 0.5rem 0.9rem;
   font-family: inherit;
   font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--charcoal);
+  font-weight: 600;
+  color: #2D2D2D;
   background: #fff;
-  border: 1px solid rgba(45, 45, 45, 0.12);
+  border: 1px solid #D9D8D3;
   border-radius: 8px;
-  padding: 0.35rem 0.7rem;
   cursor: pointer;
-  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
-.loginBtn:hover {
-  background: var(--coral);
-  border-color: var(--coral);
-  color: #fff;
-}
-
-/* -------------------------------------------------------------------------
- * Responsive
- * ------------------------------------------------------------------------- */
-
-@media (max-width: 900px) {
-  .page { padding: 1.5rem 1.5rem 0; }
-  .corner { top: 1.5rem; right: 1.5rem; }
-  .headline { margin-bottom: 2rem; }
-  .login {
-    position: static;
-    margin: 1rem 0;
-  }
-}
-
-@media (max-width: 640px) {
-  .headline {
-    font-size: clamp(2.5rem, 14vw, 4.5rem);
-    letter-spacing: -0.035em;
-  }
-  .actions { gap: 0.9rem; }
-  .corner { font-size: 0.6875rem; }
-}
-
-/* Respect reduced motion: kill the shimmer and the ribbon scroll */
-@media (prefers-reduced-motion: reduce) {
-  .shoutWord { animation: none; background: var(--coral); -webkit-text-fill-color: var(--coral); }
-  .ribbonTrack { animation: none; }
-  .actions { animation: none; }
-}
+.loginBtn:hover { border-color: #2D2D2D; }
