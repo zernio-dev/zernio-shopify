@@ -289,19 +289,22 @@ export default function Settings() {
           )}
         </s-select>
 
-        <s-heading>Auto-post triggers</s-heading>
+        <s-heading>Auto-publish</s-heading>
         <s-paragraph>
-          When enabled, the app automatically creates social posts when
-          products change in your Shopify store.
+          Publish to all connected accounts the moment a product event
+          happens in Shopify. Posts go live immediately — no scheduling,
+          no review step.
         </s-paragraph>
         <s-checkbox
-          label="Auto-post new products"
+          label="Publish when a product is created"
+          details="Posts to every connected account as soon as the product goes active."
           name="autoPostNewProducts"
           checked={autoPostNewProducts || undefined}
           onChange={() => setAutoPostNewProducts((prev) => !prev)}
         ></s-checkbox>
         <s-checkbox
-          label="Auto-post on price drops"
+          label="Publish when a product goes on sale"
+          details="Triggers when a compare-at price is set above the current price. Dedupes for 1 hour per product."
           name="autoPostPriceDrop"
           checked={autoPostPriceDrop || undefined}
           onChange={() => setAutoPostPriceDrop((prev) => !prev)}
