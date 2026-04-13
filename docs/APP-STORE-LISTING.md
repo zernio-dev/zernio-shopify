@@ -93,7 +93,7 @@ Alt options:
 ## Categories
 
 **Primary:** Marketing and conversion → Social media
-**Secondary:** Content management
+**Secondary (optional):** Marketing and conversion → Content marketing
 
 ## Pricing model
 
