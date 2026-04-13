@@ -158,10 +158,12 @@ export default function BulkSchedule() {
     return (
       <s-page heading="Bulk schedule">
         <s-section>
-          <s-banner tone="critical">{data.error}</s-banner>
-          <s-button onClick={() => navigate("/app/products")}>
-            Back to products
-          </s-button>
+          <s-stack direction="block" gap="base">
+            <s-banner tone="critical">{data.error}</s-banner>
+            <s-button onClick={() => navigate("/app/products")}>
+              Back to products
+            </s-button>
+          </s-stack>
         </s-section>
       </s-page>
     );
@@ -171,17 +173,19 @@ export default function BulkSchedule() {
     return (
       <s-page heading="Done">
         <s-section>
-          <s-banner tone="success">
-            Created {progress.done} of {progress.total} posts. Track them
-            in the Posts page.
-          </s-banner>
-          <s-stack direction="inline" gap="base">
-            <s-button variant="primary" onClick={() => navigate("/app/posts")}>
-              View posts
-            </s-button>
-            <s-button onClick={() => navigate("/app/products")}>
-              Back to products
-            </s-button>
+          <s-stack direction="block" gap="base">
+            <s-banner tone="success">
+              Created {progress.done} of {progress.total} posts. Track
+              them in the Posts page.
+            </s-banner>
+            <s-stack direction="inline" gap="base">
+              <s-button variant="primary" onClick={() => navigate("/app/posts")}>
+                View posts
+              </s-button>
+              <s-button onClick={() => navigate("/app/products")}>
+                Back to products
+              </s-button>
+            </s-stack>
           </s-stack>
         </s-section>
       </s-page>

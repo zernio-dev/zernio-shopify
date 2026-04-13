@@ -44,8 +44,10 @@ export default function TemplatesIndex() {
     return (
       <s-page heading="Templates">
         <s-section>
-          <s-banner tone="warning">Please complete setup first.</s-banner>
-          <s-button href="/app">Go to setup</s-button>
+          <s-stack direction="block" gap="base">
+            <s-banner tone="warning">Please complete setup first.</s-banner>
+            <s-button href="/app">Go to setup</s-button>
+          </s-stack>
         </s-section>
       </s-page>
     );
@@ -64,18 +66,20 @@ export default function TemplatesIndex() {
       {templates.length === 0 ? (
         <s-section>
           <s-empty-state heading="No templates yet">
-            <s-paragraph>
-              Templates let you reuse a caption format across posts, and
-              power the auto-publish triggers in Settings. Use mustache
-              variables like {`{{title}}`}, {`{{price}}`}, {`{{url}}`},
-              and {`{{description}}`} — they get filled in automatically.
-            </s-paragraph>
-            <s-button
-              variant="primary"
-              onClick={() => navigate("/app/templates/new")}
-            >
-              Create your first template
-            </s-button>
+            <s-stack direction="block" gap="base">
+              <s-paragraph>
+                Templates let you reuse a caption format across posts, and
+                power the auto-publish triggers in Settings. Use mustache
+                variables like {`{{title}}`}, {`{{price}}`}, {`{{url}}`},
+                and {`{{description}}`} — they get filled in automatically.
+              </s-paragraph>
+              <s-button
+                variant="primary"
+                onClick={() => navigate("/app/templates/new")}
+              >
+                Create your first template
+              </s-button>
+            </s-stack>
           </s-empty-state>
         </s-section>
       ) : (

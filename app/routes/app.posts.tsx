@@ -200,18 +200,20 @@ export default function Posts() {
       <s-section heading={data.posts.length > 0 ? `${data.posts.length} result${data.posts.length === 1 ? "" : "s"}` : undefined}>
         {data.posts.length === 0 ? (
           <s-empty-state heading="No posts match">
-            <s-paragraph>
-              {hasFilters
-                ? "Adjust the filters or clear them to see all posts."
-                : "Schedule your first post from a product."}
-            </s-paragraph>
-            {hasFilters ? (
-              <s-button onClick={clearFilters}>Clear filters</s-button>
-            ) : (
-              <s-button variant="primary" onClick={() => navigate("/app/products")}>
-                Browse products
-              </s-button>
-            )}
+            <s-stack direction="block" gap="base">
+              <s-paragraph>
+                {hasFilters
+                  ? "Adjust the filters or clear them to see all posts."
+                  : "Schedule your first post from a product."}
+              </s-paragraph>
+              {hasFilters ? (
+                <s-button onClick={clearFilters}>Clear filters</s-button>
+              ) : (
+                <s-button variant="primary" onClick={() => navigate("/app/products")}>
+                  Browse products
+                </s-button>
+              )}
+            </s-stack>
           </s-empty-state>
         ) : (
           <s-stack direction="block" gap="small-200">

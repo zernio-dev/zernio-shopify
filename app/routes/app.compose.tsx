@@ -185,8 +185,12 @@ export default function Compose() {
     return (
       <s-page heading="Share to social">
         <s-section>
-          <s-banner tone="critical">{data.error}</s-banner>
-          <s-button onClick={() => navigate("/app/products")}>Back to products</s-button>
+          <s-stack direction="block" gap="base">
+            <s-banner tone="critical">{data.error}</s-banner>
+            <s-button onClick={() => navigate("/app/products")}>
+              Back to products
+            </s-button>
+          </s-stack>
         </s-section>
       </s-page>
     );
@@ -197,16 +201,18 @@ export default function Compose() {
     return (
       <s-page heading="Done">
         <s-section>
-          <s-banner tone="success">
-            Your post for &quot;{product.title}&quot; was sent to Zernio.
-          </s-banner>
-          <s-stack direction="inline" gap="base">
-            <s-button variant="primary" onClick={() => navigate("/app/posts")}>
-              View posts
-            </s-button>
-            <s-button onClick={() => navigate("/app/products")}>
-              Back to products
-            </s-button>
+          <s-stack direction="block" gap="base">
+            <s-banner tone="success">
+              Your post for &quot;{product.title}&quot; was sent to Zernio.
+            </s-banner>
+            <s-stack direction="inline" gap="base">
+              <s-button variant="primary" onClick={() => navigate("/app/posts")}>
+                View posts
+              </s-button>
+              <s-button onClick={() => navigate("/app/products")}>
+                Back to products
+              </s-button>
+            </s-stack>
           </s-stack>
         </s-section>
       </s-page>

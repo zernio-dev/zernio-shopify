@@ -221,17 +221,19 @@ export default function AppIndex() {
       <s-section heading="Recent posts">
         {data.recentPosts.length === 0 ? (
           <s-empty-state heading="No posts yet">
-            <s-paragraph>
-              Schedule your first post from a product, or set up a
-              template that auto-publishes when products change.
-            </s-paragraph>
-            <s-stack direction="inline" gap="small-200">
-              <s-button variant="primary" onClick={() => navigate("/app/products")}>
-                Browse products
-              </s-button>
-              <s-button onClick={() => navigate("/app/templates")}>
-                Create a template
-              </s-button>
+            <s-stack direction="block" gap="base">
+              <s-paragraph>
+                Schedule your first post from a product, or set up a
+                template that auto-publishes when products change.
+              </s-paragraph>
+              <s-stack direction="inline" gap="small-200">
+                <s-button variant="primary" onClick={() => navigate("/app/products")}>
+                  Browse products
+                </s-button>
+                <s-button onClick={() => navigate("/app/templates")}>
+                  Create a template
+                </s-button>
+              </s-stack>
             </s-stack>
           </s-empty-state>
         ) : (
@@ -289,13 +291,15 @@ export default function AppIndex() {
       {/* Helpful aside if user hasn't picked a default profile yet */}
       {!data.hasProfile && (
         <s-section slot="aside" heading="Set a default profile">
-          <s-paragraph>
-            You haven't picked a default Zernio profile. Posts created
-            from this app will use your first connected profile.
-          </s-paragraph>
-          <s-button onClick={() => navigate("/app/settings")}>
-            Open settings
-          </s-button>
+          <s-stack direction="block" gap="base">
+            <s-paragraph>
+              You haven't picked a default Zernio profile. Posts created
+              from this app will use your first connected profile.
+            </s-paragraph>
+            <s-button onClick={() => navigate("/app/settings")}>
+              Open settings
+            </s-button>
+          </s-stack>
         </s-section>
       )}
     </s-page>

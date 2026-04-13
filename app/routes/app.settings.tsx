@@ -156,8 +156,10 @@ export default function Settings() {
     return (
       <s-page heading="Settings">
         <s-section>
-          <s-banner tone="warning">Please complete setup first.</s-banner>
-          <s-button onClick={() => navigate("/app")}>Go to setup</s-button>
+          <s-stack direction="block" gap="base">
+            <s-banner tone="warning">Please complete setup first.</s-banner>
+            <s-button onClick={() => navigate("/app")}>Go to setup</s-button>
+          </s-stack>
         </s-section>
       </s-page>
     );
@@ -336,7 +338,7 @@ export default function Settings() {
           if (missing.length === 0) return null;
           return (
             <s-banner tone="warning">
-              <s-stack direction="block" gap="small-100">
+              <s-stack direction="block" gap="base">
                 <s-text fontWeight="bold">
                   No active template for: {missing.join(", ")}
                 </s-text>

@@ -109,12 +109,14 @@ export default function TemplateEditor() {
     return (
       <s-page heading="Template not found">
         <s-section>
-          <s-banner tone="critical">
-            We could not find that template. It may have been deleted.
-          </s-banner>
-          <s-button onClick={() => navigate("/app/templates")}>
-            Back to templates
-          </s-button>
+          <s-stack direction="block" gap="base">
+            <s-banner tone="critical">
+              We could not find that template. It may have been deleted.
+            </s-banner>
+            <s-button onClick={() => navigate("/app/templates")}>
+              Back to templates
+            </s-button>
+          </s-stack>
         </s-section>
       </s-page>
     );

@@ -176,21 +176,23 @@ export default function Products() {
 
         {products.length === 0 ? (
           <s-empty-state heading="No products found">
-            <s-paragraph>
-              {search
-                ? "No products match your search. Try a different term or clear the filter."
-                : "Add a product in your Shopify admin to get started."}
-            </s-paragraph>
-            {search && (
-              <s-button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSearchParams({});
-                }}
-              >
-                Clear search
-              </s-button>
-            )}
+            <s-stack direction="block" gap="base">
+              <s-paragraph>
+                {search
+                  ? "No products match your search. Try a different term or clear the filter."
+                  : "Add a product in your Shopify admin to get started."}
+              </s-paragraph>
+              {search && (
+                <s-button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchParams({});
+                  }}
+                >
+                  Clear search
+                </s-button>
+              )}
+            </s-stack>
           </s-empty-state>
         ) : (
           <s-grid gridTemplateColumns="repeat(auto-fill, minmax(220px, 1fr))" gap="base">
