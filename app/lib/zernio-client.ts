@@ -19,6 +19,12 @@ export interface ZernioUser {
   usage: { uploads: number; profiles: number };
 }
 
+export interface ZernioBilling {
+  billingSystem: string;
+  plan: { name: string; isUsageBased: boolean; isPaid: boolean };
+  status: { hasAccess: boolean; suspended: boolean };
+}
+
 export interface ZernioProfile {
   _id: string;
   name: string;
@@ -181,6 +187,34 @@ export class ZernioClient {
     // /usage-stats returns plan info and validates the API key.
     const data = await this.request<ZernioUser>("GET", "/usage-stats");
     return data;
+  }
+
+  /** Billing snapshot; `plan.isPaid` is the split-billing paid-key gate. */
+  async getBilling(): Promise<ZernioBilling> {
+    return this.request<ZernioBilling>("GET", "/billing");
+  }
+
+  /**
+   * Headless connect: returns the platform OAuth URL for this account.
+   * The end user opens it in a browser tab (it cannot run inside the
+   * Shopify admin iframe) and lands back on `redirectUrl` when done.
+   * `profileId` is required by the connect endpoint (verified live).
+   */
+  async getConnectUrl(args: {
+    platform: string;
+    profileId: string;
+    redirectUrl: string;
+  }): Promise<string> {
+    const qs = new URLSearchParams({
+      headless: "true",
+      profileId: args.profileId,
+      redirect_url: args.redirectUrl,
+    });
+    const data = await this.request<{ authUrl: string }>(
+      "GET",
+      `/connect/${args.platform}?${qs.toString()}`,
+    );
+    return data.authUrl;
   }
 
   /** List all profiles for the authenticated user. */

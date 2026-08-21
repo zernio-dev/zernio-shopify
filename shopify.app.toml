@@ -1,6 +1,9 @@
 # Learn more: https://shopify.dev/docs/apps/build/cli-for-apps/app-configuration
+# client_id is the CURRENT app (Dev Dashboard org 213586088, submitted for
+# review ref 129749). The previous app ee20ee832fea8bfbc7fe61e1c960b935 was
+# deleted; do not resurrect its credentials.
 name = "Zernio"
-client_id = "ee20ee832fea8bfbc7fe61e1c960b935"
+client_id = "a0953a370536891cad03bc9f7b2716f0"
 application_url = "https://store.zernio.com"
 embedded = true
 
@@ -37,6 +40,16 @@ api_version = "2025-10"
   [[webhooks.subscriptions]]
   topics = ["inventory_levels/update"]
   uri = "/webhooks/inventory"
+
+  # Split-billing lifecycle: subscription status/cap changes and the 90%
+  # spending-limit warning
+  [[webhooks.subscriptions]]
+  topics = ["app_subscriptions/update"]
+  uri = "/webhooks/app/subscriptions-update"
+
+  [[webhooks.subscriptions]]
+  topics = ["app_subscriptions/approaching_capped_amount"]
+  uri = "/webhooks/app/approaching-cap"
 
   # Mandatory GDPR compliance webhooks
   [[webhooks.subscriptions]]

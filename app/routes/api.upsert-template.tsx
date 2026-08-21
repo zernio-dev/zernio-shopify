@@ -1,11 +1,9 @@
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
+import { authenticate } from "../shopify.server";
 
 /**
  * Create or update a PostTemplate.
- *
- * Skips authenticate.admin() for the same POST/410 reason as our other
- * /api/* endpoints. Shop is resolved from the most recent offline session.
  *
  * Form fields:
  *   id?              — when present, update; otherwise create
@@ -19,12 +17,8 @@ import db from "../db.server";
  *   autoPublishTime  — optional HH:mm string
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const recentSession = await db.session.findFirst({
-    orderBy: { id: "desc" },
-    where: { isOnline: false },
-  });
-  const shop = recentSession?.shop;
-  if (!shop) return Response.json({ error: "Session not found" }, { status: 400 });
+  const { session } = await authenticate.admin(request);
+  const shop = session.shop;
 
   const config = await db.shopConfig.findUnique({ where: { shop } });
   if (!config) return Response.json({ error: "Not configured" }, { status: 400 });

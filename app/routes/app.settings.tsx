@@ -422,11 +422,6 @@ export default function Settings() {
       <s-section slot="aside" heading="Help">
         <s-unordered-list>
           <s-list-item>
-            <s-link href="https://zernio.com/dashboard/api-keys" target="_blank">
-              Manage API keys at zernio.com →
-            </s-link>
-          </s-list-item>
-          <s-list-item>
             <s-link href="https://docs.zernio.com" target="_blank">
               Zernio API docs →
             </s-link>

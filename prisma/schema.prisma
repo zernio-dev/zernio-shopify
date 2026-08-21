@@ -54,6 +54,20 @@ model ShopConfig {
   // Append UTM params to product URLs in post content when enabled.
   utmEnabled Boolean @default(false)
 
+  // Split billing (Shopify App Store requirement 1.2.1).
+  // keySource: "byo" = existing paid Zernio customer pasted their key;
+  // "shopify" = account provisioned by us, billed via the Shopify subscription.
+  keySource               String    @default("byo")
+  provisionedUserId       String? // Zernio userId for keySource=shopify
+  subscriptionId          String? // gid of the AppSubscription
+  subscriptionLineItemId  String? // usage line item gid for appUsageRecordCreate
+  subscriptionStatus      String? // ACTIVE | CANCELLED | EXPIRED | FROZEN
+  currentPeriodEnd        DateTime?
+  cappedAmountUsd         Float?
+  approachingCappedAmount Boolean   @default(false)
+  capBlocked              Boolean   @default(false) // last usage post rejected at cap
+  isTestShop              Boolean? // null = not yet resolved via shop.plan.partnerDevelopment
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

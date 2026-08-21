@@ -118,8 +118,11 @@ export default function AppIndex() {
     }
   }, [fetcher.data, shopify, navigate]);
 
-  // ── Onboarding ─────────────────────────────────────────────────────
+  // ── Onboarding gate: subscribe through Shopify, or connect a paid key ──
   if (!data.onboarded && !fetcher.data?.success) {
+    const handleSubscribe = () => {
+      fetcher.submit({ intent: "subscribe" }, { method: "POST", action: "/app" });
+    };
     const handleConnect = () => {
       const val = apiKeyValue.trim();
       if (!val.startsWith("sk_")) {
@@ -131,16 +134,30 @@ export default function AppIndex() {
 
     return (
       <s-page heading="Welcome to Zernio for Shopify">
-        <s-section heading="Connect your Zernio account">
+        <s-section heading="Subscribe to start posting">
           <s-paragraph>
-            Paste your Zernio API key to start scheduling social posts for
-            your Shopify products across 13 platforms.
+            Schedule social posts for your Shopify products across 13
+            platforms. Pay per connected social account, billed by Shopify.
+            Approve a monthly spending limit and you are ready to post.
           </s-paragraph>
+
+          {fetcher.data?.error && (
+            <s-banner tone="critical">{fetcher.data.error}</s-banner>
+          )}
+
+          <s-button
+            variant="primary"
+            disabled={isLoading || undefined}
+            onClick={handleSubscribe}
+          >
+            {isLoading ? "Redirecting…" : "Subscribe through Shopify"}
+          </s-button>
+        </s-section>
+
+        <s-section heading="Already a paid Zernio customer?">
           <s-paragraph>
-            Need a key?{" "}
-            <s-link href="https://zernio.com/dashboard/api-keys" target="_blank">
-              Get one at zernio.com →
-            </s-link>
+            Connect your existing account with its API key. Your billing
+            stays with Zernio.
           </s-paragraph>
 
           <s-text-field
@@ -152,16 +169,8 @@ export default function AppIndex() {
             onChange={(e: any) => setApiKeyValue(e.currentTarget.value)}
           ></s-text-field>
 
-          {fetcher.data?.error && (
-            <s-banner tone="critical">{fetcher.data.error}</s-banner>
-          )}
-
-          <s-button
-            variant="primary"
-            disabled={isLoading || undefined}
-            onClick={handleConnect}
-          >
-            {isLoading ? "Connecting…" : "Connect"}
+          <s-button disabled={isLoading || undefined} onClick={handleConnect}>
+            {isLoading ? "Connecting…" : "Connect with API key"}
           </s-button>
         </s-section>
 

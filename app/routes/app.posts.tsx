@@ -303,12 +303,6 @@ export default function Posts() {
 
                       <s-stack direction="inline" gap="small-200">
                         <s-button
-                          href={`https://zernio.com/dashboard/posts/${post.zernioPostId}`}
-                          target="_blank"
-                        >
-                          Open in Zernio →
-                        </s-button>
-                        <s-button
                           onClick={() =>
                             navigate(
                               `/app/compose?productId=${encodeURIComponent(post.shopifyProductId)}`,
