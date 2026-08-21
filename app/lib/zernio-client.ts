@@ -19,6 +19,12 @@ export interface ZernioUser {
   usage: { uploads: number; profiles: number };
 }
 
+export interface ZernioBilling {
+  billingSystem: string;
+  plan: { name: string; isUsageBased: boolean; isPaid: boolean };
+  status: { hasAccess: boolean; suspended: boolean };
+}
+
 export interface ZernioProfile {
   _id: string;
   name: string;
@@ -181,6 +187,11 @@ export class ZernioClient {
     // /usage-stats returns plan info and validates the API key.
     const data = await this.request<ZernioUser>("GET", "/usage-stats");
     return data;
+  }
+
+  /** Billing snapshot; `plan.isPaid` is the split-billing paid-key gate. */
+  async getBilling(): Promise<ZernioBilling> {
+    return this.request<ZernioBilling>("GET", "/billing");
   }
 
   /** List all profiles for the authenticated user. */
