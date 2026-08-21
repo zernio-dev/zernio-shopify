@@ -20,11 +20,11 @@ const FAQS = [
   },
   {
     q: "Do I need a Zernio account?",
-    a: "Yes. The app is a bridge between Shopify and Zernio's social APIs — the platform that actually publishes to the 13 networks (plus inbox, analytics, and webhooks if you need them). Sign up free at zernio.com, connect your social accounts there, paste your API key into this app, and you're connected. Revenue comes from your Zernio subscription, not from this app.",
+    a: "Yes. The app is powered by Zernio's social APIs, the platform that actually publishes to the 13 networks. Install from the Shopify App Store and subscribe inside the app: you pay per connected social account, billed by Shopify on your regular Shopify invoice. Already a paid Zernio customer? Connect your existing account with its API key instead and keep your current billing.",
   },
   {
-    q: "Is the Shopify app really free?",
-    a: "Yes — no install fee, no per-post charge, no in-app upsells. You pay Zernio for its social posting plan (usage-based, from $1 per connected account), and this app gives you a Shopify-native way to use it. Open source under MIT on GitHub.",
+    q: "How much does it cost?",
+    a: "Usage-based, billed by Shopify: up to $6 per connected social account per 30 days, with volume discounts applied automatically as you connect more. No install fee, no per-post charge. You approve a monthly spending limit up front and can change it anytime. Existing paid Zernio customers connect with their API key at no extra charge. Open source under MIT on GitHub.",
   },
   {
     q: "Can I schedule posts, or does everything publish immediately?",
