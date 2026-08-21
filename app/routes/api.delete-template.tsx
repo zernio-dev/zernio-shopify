@@ -1,17 +1,14 @@
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
+import { authenticate } from "../shopify.server";
 
 /**
  * Delete a PostTemplate. Scoped by shopConfigId so an id from another
  * shop is silently ignored.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const recentSession = await db.session.findFirst({
-    orderBy: { id: "desc" },
-    where: { isOnline: false },
-  });
-  const shop = recentSession?.shop;
-  if (!shop) return Response.json({ error: "Session not found" }, { status: 400 });
+  const { session } = await authenticate.admin(request);
+  const shop = session.shop;
 
   const config = await db.shopConfig.findUnique({ where: { shop } });
   if (!config) return Response.json({ error: "Not configured" }, { status: 400 });

@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
 import { decrypt } from "../lib/encryption.server";
-import { unauthenticated } from "../shopify.server";
+import { authenticate } from "../shopify.server";
 import {
   ZernioClient,
   type CreatePostParams,
@@ -57,14 +57,8 @@ function stripHtml(html: string): string {
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const recentSession = await db.session.findFirst({
-    orderBy: { id: "desc" },
-    where: { isOnline: false },
-  });
-  const shop = recentSession?.shop;
-  if (!shop) {
-    return Response.json({ error: "Session not found" }, { status: 400 });
-  }
+  const { session, admin } = await authenticate.admin(request);
+  const shop = session.shop;
 
   const config = await db.shopConfig.findUnique({ where: { shop } });
   if (!config) {
@@ -144,7 +138,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   // Fetch product details for caption rendering
-  const { admin } = await unauthenticated.admin(shop);
   const resp = await admin.graphql(PRODUCTS_BY_IDS_QUERY, {
     variables: { ids: productIds },
   });

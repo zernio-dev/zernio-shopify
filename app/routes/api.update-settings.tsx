@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
+import { authenticate } from "../shopify.server";
 import { encrypt, apiKeyPreview } from "../lib/encryption.server";
 import { ZernioClient, ZernioApiError } from "../lib/zernio-client";
 
@@ -9,20 +10,10 @@ import { ZernioClient, ZernioApiError } from "../lib/zernio-client";
  * Handles two intents:
  * - "update-key": Verify and save a new Zernio API key
  * - "update-settings": Save preferences (profile, timezone, auto-post toggles)
- *
- * Skips authenticate.admin() to avoid the 410 error on POST in embedded apps.
- * Gets the shop from the most recent offline session in the database.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  // Get shop from the most recent offline DB session
-  const recentSession = await db.session.findFirst({
-    orderBy: { id: "desc" },
-    where: { isOnline: false },
-  });
-  const shop = recentSession?.shop;
-  if (!shop) {
-    return Response.json({ error: "Session not found" }, { status: 400 });
-  }
+  const { session } = await authenticate.admin(request);
+  const shop = session.shop;
 
   const config = await db.shopConfig.findUnique({ where: { shop } });
   if (!config) {

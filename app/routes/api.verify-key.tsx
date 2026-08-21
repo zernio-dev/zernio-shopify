@@ -1,39 +1,19 @@
 import type { ActionFunctionArgs } from "react-router";
 import { randomBytes } from "crypto";
 import db from "../db.server";
+import { authenticate } from "../shopify.server";
 import { ZernioClient } from "../lib/zernio-client";
 import { encrypt, apiKeyPreview } from "../lib/encryption.server";
 
 /**
  * API endpoint for verifying a Zernio API key.
  *
- * IMPORTANT: We intentionally skip authenticate.admin() here because
- * it throws a redirect on POST requests in embedded apps before our
- * action code runs. Instead, we get the shop from the existing session
- * in the database (which was created during the initial page load).
- *
  * After saving the config, this also registers a Zernio webhook so the
  * app receives post status updates (published, failed, etc.).
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  // Get shop from the URL params or find the most recent session
-  const url = new URL(request.url);
-  const shopParam = url.searchParams.get("shop");
-
-  let shop: string | null = shopParam;
-
-  if (!shop) {
-    // Find shop from the most recent offline session in the database
-    const recentSession = await db.session.findFirst({
-      orderBy: { id: "desc" },
-      where: { isOnline: false },
-    });
-    shop = recentSession?.shop || null;
-  }
-
-  if (!shop) {
-    return Response.json({ error: "Session not found. Reload the page." }, { status: 400 });
-  }
+  const { session } = await authenticate.admin(request);
+  const shop = session.shop;
 
   const formData = await request.formData();
   const apiKey = formData.get("apiKey") as string;

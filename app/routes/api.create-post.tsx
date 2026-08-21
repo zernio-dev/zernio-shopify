@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
+import { authenticate } from "../shopify.server";
 import { decrypt } from "../lib/encryption.server";
 import {
   ZernioClient,
@@ -10,9 +11,6 @@ import { injectUtm } from "../lib/utm.server";
 
 /**
  * Create a Zernio post from the compose page.
- *
- * Skips authenticate.admin() (POST in embedded apps throws 410). Shop
- * comes from the most recent offline session.
  *
  * Form fields:
  *   content       — shared caption (used as fallback for any platform
@@ -30,12 +28,8 @@ import { injectUtm } from "../lib/utm.server";
  *                   Only non-empty overrides are forwarded to Zernio.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const recentSession = await db.session.findFirst({
-    orderBy: { id: "desc" },
-    where: { isOnline: false },
-  });
-  const shop = recentSession?.shop;
-  if (!shop) return Response.json({ error: "Session not found" }, { status: 400 });
+  const { session } = await authenticate.admin(request);
+  const shop = session.shop;
 
   const config = await db.shopConfig.findUnique({ where: { shop } });
   if (!config) return Response.json({ error: "Not configured" }, { status: 400 });
