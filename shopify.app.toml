@@ -38,6 +38,16 @@ api_version = "2025-10"
   topics = ["inventory_levels/update"]
   uri = "/webhooks/inventory"
 
+  # Split-billing lifecycle: subscription status/cap changes and the 90%
+  # spending-limit warning
+  [[webhooks.subscriptions]]
+  topics = ["app_subscriptions/update"]
+  uri = "/webhooks/app/subscriptions-update"
+
+  [[webhooks.subscriptions]]
+  topics = ["app_subscriptions/approaching_capped_amount"]
+  uri = "/webhooks/app/approaching-cap"
+
   # Mandatory GDPR compliance webhooks
   [[webhooks.subscriptions]]
   uri = "/webhooks/compliance"

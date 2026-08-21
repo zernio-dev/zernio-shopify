@@ -33,5 +33,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     await db.session.deleteMany({ where: { shop } });
   }
 
+  // Shopify auto-cancels the subscription on uninstall; suspend the
+  // provisioned Zernio account so the key stops working. BYO shops keep
+  // their Zernio account untouched.
+  const config = await db.shopConfig.findUnique({ where: { shop } });
+  if (config?.keySource === "shopify") {
+    try {
+      const { suspendMerchant } = await import("../lib/zernio-internal.server");
+      await suspendMerchant({ shop });
+      await db.shopConfig.update({
+        where: { shop },
+        data: { subscriptionStatus: "CANCELLED" },
+      });
+    } catch (err) {
+      console.error(`[uninstalled] suspend failed for ${shop}:`, err);
+    }
+  }
+
   return new Response(null, { status: 200 });
 };
