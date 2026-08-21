@@ -15,6 +15,18 @@ export function buildUsageIdempotencyKey(args: {
 }
 
 /**
+ * Stable day-precision identifier for the current 30-day cycle, derived
+ * from the subscription's currentPeriodEnd. Used in idempotency keys so
+ * the daily cron re-posts are Shopify-side no-ops within a cycle and the
+ * next cycle re-bills every account.
+ */
+export function derivePeriodStart(currentPeriodEnd: string): string {
+  const end = new Date(currentPeriodEnd);
+  const start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+  return start.toISOString().slice(0, 10);
+}
+
+/**
  * Whether billing calls for this shop must use Shopify test charges.
  * True for partner development stores (the only stores where test charges
  * work, and real ones don't). SHOPIFY_BILLING_TEST=true forces it globally.

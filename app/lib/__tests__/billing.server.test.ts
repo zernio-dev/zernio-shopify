@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { buildUsageIdempotencyKey } from "../billing.server";
+import { buildUsageIdempotencyKey, derivePeriodStart } from "../billing.server";
+
+describe("derivePeriodStart", () => {
+  it("is currentPeriodEnd minus 30 days, day precision", () => {
+    expect(derivePeriodStart("2026-08-31T10:30:00Z")).toBe("2026-08-01");
+  });
+
+  it("is stable across times within the same cycle", () => {
+    expect(derivePeriodStart("2026-08-31T00:00:01Z")).toBe(
+      derivePeriodStart("2026-08-31T23:59:59Z"),
+    );
+  });
+});
 
 describe("buildUsageIdempotencyKey", () => {
   it("is stable for the same shop, unit, and period", () => {
