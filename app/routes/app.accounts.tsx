@@ -92,10 +92,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         error: "You reached your approved Shopify spending limit. Raise it to connect more accounts.",
       });
     }
+    if (!config.defaultProfileId) {
+      return Response.json({ error: "No Zernio profile on this connection. Re-run onboarding from Settings." });
+    }
     const client = new ZernioClient(decrypt(config.zernioApiKeyEncrypted));
     const appUrl = process.env.SHOPIFY_APP_URL || "https://store.zernio.com";
     try {
-      const url = await client.getConnectUrl(platform, `${appUrl}/app/accounts?connected=1`);
+      const url = await client.getConnectUrl({
+        platform,
+        profileId: config.defaultProfileId,
+        redirectUrl: `${appUrl}/app/accounts?connected=1`,
+      });
       return Response.json({ url });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not start the connect flow";

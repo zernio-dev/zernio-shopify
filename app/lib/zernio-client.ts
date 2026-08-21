@@ -198,12 +198,21 @@ export class ZernioClient {
    * Headless connect: returns the platform OAuth URL for this account.
    * The end user opens it in a browser tab (it cannot run inside the
    * Shopify admin iframe) and lands back on `redirectUrl` when done.
+   * `profileId` is required by the connect endpoint (verified live).
    */
-  async getConnectUrl(platform: string, redirectUrl: string): Promise<string> {
-    const qs = new URLSearchParams({ headless: "true", redirect_url: redirectUrl });
+  async getConnectUrl(args: {
+    platform: string;
+    profileId: string;
+    redirectUrl: string;
+  }): Promise<string> {
+    const qs = new URLSearchParams({
+      headless: "true",
+      profileId: args.profileId,
+      redirect_url: args.redirectUrl,
+    });
     const data = await this.request<{ authUrl: string }>(
       "GET",
-      `/connect/${platform}?${qs.toString()}`,
+      `/connect/${args.platform}?${qs.toString()}`,
     );
     return data.authUrl;
   }
