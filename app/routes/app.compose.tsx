@@ -428,7 +428,7 @@ export default function Compose() {
       <s-section heading="Post to">
         {accounts.length === 0 ? (
           <s-banner tone="warning">
-            No social accounts found. Connect them at zernio.com.
+            No social accounts found. Connect them in the <s-link href="/app/accounts">Accounts tab</s-link>.
           </s-banner>
         ) : (
           <s-stack direction="block" gap="small-200">

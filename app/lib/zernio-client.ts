@@ -194,6 +194,20 @@ export class ZernioClient {
     return this.request<ZernioBilling>("GET", "/billing");
   }
 
+  /**
+   * Headless connect: returns the platform OAuth URL for this account.
+   * The end user opens it in a browser tab (it cannot run inside the
+   * Shopify admin iframe) and lands back on `redirectUrl` when done.
+   */
+  async getConnectUrl(platform: string, redirectUrl: string): Promise<string> {
+    const qs = new URLSearchParams({ headless: "true", redirect_url: redirectUrl });
+    const data = await this.request<{ authUrl: string }>(
+      "GET",
+      `/connect/${platform}?${qs.toString()}`,
+    );
+    return data.authUrl;
+  }
+
   /** List all profiles for the authenticated user. */
   async getProfiles(): Promise<ZernioProfile[]> {
     const data = await this.request<{ profiles: ZernioProfile[] }>(
